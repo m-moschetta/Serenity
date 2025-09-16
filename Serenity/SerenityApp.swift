@@ -12,7 +12,10 @@ import SwiftData
 struct SerenityApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Conversation.self,
+            ChatMessage.self,
+            MemorySummary.self,
+            Attachment.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
