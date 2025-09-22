@@ -99,11 +99,13 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                                 .textInputAutocapitalization(.never)
                                 .textContentType(.password)
                                 .autocorrectionDisabled()
+                                .foregroundStyle(Color.black)
                         } else {
                             SecureField("API Key", text: $apiKey)
                                 .textInputAutocapitalization(.never)
                                 .textContentType(.password)
                                 .autocorrectionDisabled()
+                                .foregroundStyle(Color.black)
                         }
                         Button(showingKey ? "Nascondi" : "Mostra") { showingKey.toggle() }
                     }
@@ -120,6 +122,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         .textInputAutocapitalization(.never)
                         .textContentType(.password)
                         .autocorrectionDisabled()
+                        .foregroundStyle(Color.black)
                     Button("Salva") {
                         KeychainService.shared.mistralApiKey = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
                     }
@@ -131,10 +134,36 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         .textInputAutocapitalization(.never)
                         .textContentType(.password)
                         .autocorrectionDisabled()
+                        .foregroundStyle(Color.black)
                     Button("Salva") {
                         KeychainService.shared.groqApiKey = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
                     }
                     .disabled(groqKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    HStack {
+                        Button("Aggiorna modelli Groq") {
+                            Task {
+                                do {
+                                    let typed = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    let keyToUse: String
+                                    if !typed.isEmpty {
+                                        keyToUse = typed
+                                    } else if let saved = KeychainService.shared.groqApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        keyToUse = saved
+                                    } else {
+                                        keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                    }
+                                    try await catalog.refreshGroq(apiKey: keyToUse)
+                                    diagMessage = "Modelli Groq aggiornati: \(catalog.groqModels.count)"
+                                    showingDiagAlert = true
+                                } catch {
+                                    let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                    diagMessage = "Errore: \(last)"
+                                    showingDiagAlert = true
+                                }
+                            }
+                        }
+                        Spacer()
+                    }
                 }
 
                 Section("Provider e Modello") {
@@ -151,7 +180,24 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         HStack {
                             Button("Aggiorna modelli OpenAI") {
                                 Task {
-                                    if let key = KeychainService.shared.apiKey { try? await catalog.refreshOpenAI(apiKey: key) }
+                                    do {
+                                        let typed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        let keyToUse: String
+                                        if !typed.isEmpty {
+                                            keyToUse = typed
+                                        } else if let saved = KeychainService.shared.apiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            keyToUse = saved
+                                        } else {
+                                            keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                        }
+                                        try await catalog.refreshOpenAI(apiKey: keyToUse)
+                                        diagMessage = "Modelli OpenAI aggiornati: \(catalog.openaiModels.count)"
+                                        showingDiagAlert = true
+                                    } catch {
+                                        let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                        diagMessage = "Errore: \(last)"
+                                        showingDiagAlert = true
+                                    }
                                 }
                             }
                             Spacer()
@@ -159,6 +205,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         TextField("Modello personalizzato", text: $openaiModel)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
+                            .foregroundStyle(Color.black)
                     } else if aiProvider == "mistral" {
                         Picker("Modello", selection: $mistralModel) {
                             ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
@@ -166,7 +213,24 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         HStack {
                             Button("Aggiorna modelli Mistral") {
                                 Task {
-                                    if let key = KeychainService.shared.mistralApiKey { try? await catalog.refreshMistral(apiKey: key) }
+                                    do {
+                                        let typed = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        let keyToUse: String
+                                        if !typed.isEmpty {
+                                            keyToUse = typed
+                                        } else if let saved = KeychainService.shared.mistralApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            keyToUse = saved
+                                        } else {
+                                            keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                        }
+                                        try await catalog.refreshMistral(apiKey: keyToUse)
+                                        diagMessage = "Modelli Mistral aggiornati: \(catalog.mistralModels.count)"
+                                        showingDiagAlert = true
+                                    } catch {
+                                        let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                        diagMessage = "Errore: \(last)"
+                                        showingDiagAlert = true
+                                    }
                                 }
                             }
                             Spacer()
@@ -174,6 +238,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         TextField("Modello personalizzato", text: $mistralModel)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
+                            .foregroundStyle(Color.black)
                     } else if aiProvider == "groq" {
                         Picker("Modello", selection: $groqModel) {
                             ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
@@ -189,6 +254,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         TextField("Modello personalizzato", text: $groqModel)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
+                            .foregroundStyle(Color.black)
                     }
                 }
                 
@@ -215,13 +281,13 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                     .foregroundStyle(.primary)
                     if showPromptEditor {
                         Text("Prompt di sistema")
-                        TextEditor(text: $systemPrompt).frame(minHeight: 120)
+                        TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
                         Text("Prompt riassunto")
-                        TextEditor(text: $summaryPrompt).frame(minHeight: 120)
+                        TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
                         HStack {
                             Button("Reset") {
                                 systemPrompt = """
-Sei un chatbot progettato per supportare le persone attraverso un dialogo empatico, personalizzato e rispettoso, ispirato al modo in cui un terapeuta umano esperto si relaziona con i propri pazienti. Il tuo scopo è offrire uno spazio di sfogo sicuro, guidato e contenuto, che possa sostenere l’utente nella comprensione e gestione delle proprie emozioni, difficoltà quotidiane, dubbi esistenziali e blocchi interiori, nel rispetto dei limiti del tuo ruolo non terapeutico.
+Sei un chatbot progettato per supportare le persone attraverso un dialogo empatico, personalizzato e rispettoso, ispirato al modo in cui un terapeuta umano esperto si relaziona con i propri pazienti. Il tuo scopo è offrire uno spazio di sfogo sicuro, guidato e contenuto, che possa sostenere l’utente nella comprensione e gestione delle proprie emozioni, difficoltà quotidiane, dubbi esistenziali e blocchi interiori, nel rispetto del ruolo non terapeutico.
 
 🎯 Obiettivo principale
 Fornire ascolto attivo, supporto emotivo e spunti di riflessione attraverso un linguaggio personalizzato e umano. Le tue risposte devono sempre far sentire la persona:
@@ -344,3 +410,4 @@ extension SettingsView {
         showingDiagAlert = true
     }
 }
+

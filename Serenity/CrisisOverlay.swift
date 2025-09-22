@@ -12,67 +12,218 @@ struct CrisisOverlayView: View {
     @AppStorage("crisisExtraLabel") private var crisisExtraLabel: String = ""
     @AppStorage("crisisExtraNumber") private var crisisExtraNumber: String = ""
 
-    private var primaryNumber: String {
-        let trimmed = (overridePrimaryNumber ?? crisisPrimaryNumber).trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty { return trimmed }
-        // Fallback predefinito: 112 (numero unico emergenze in molti paesi europei)
-        return "112"
-    }
+    // Numeri di emergenza predefiniti per l'Italia
+    private let emergencyContacts = [
+        EmergencyContact(
+            number: "112",
+            label: "Emergenze",
+            description: "Numero Unico Emergenze",
+            icon: "exclamationmark.triangle.fill",
+            color: Color.red
+        ),
+        EmergencyContact(
+            number: "0223272327",
+            label: "Telefono Amico",
+            description: "Supporto psicologico 10-24",
+            icon: "heart.fill",
+            color: Color.blue
+        ),
+        EmergencyContact(
+            number: "0677208977",
+            label: "Samaritans",
+            description: "Ascolto 13-22",
+            icon: "person.2.fill",
+            color: Color.green
+        )
+    ]
 
     var body: some View {
         ZStack {
-            Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: "exclamationmark.triangle.fill").font(.largeTitle).foregroundStyle(.yellow)
-                Text("Serve aiuto immediato")
-                    .font(.title2).bold()
-                VStack(spacing: 10) {
-                    if let msg = customMessage, !msg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(msg)
-                    } else {
-                        Text("Capisco che in questo momento potresti sentirti sopraffatt* da emozioni molto intense. Non sei sol*: chiedere aiuto è un atto di grande forza.")
-                        Text("È importante che tu parli con una persona reale in grado di aiutarti davvero. Ti invito subito a contattare uno di questi numeri ufficiali.")
-                    }
+            // Background blur
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { /* Prevent dismiss on background tap */ }
+
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 16) {
+                    Image(systemName: "heart.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.white, .red)
+                        .shadow(radius: 10)
+
+                    Text("Non sei sol*")
+                        .font(.title.bold())
+                        .foregroundColor(.white)
+
+                    Text("Chiedere aiuto è un atto di coraggio")
+                        .font(.headline)
+                        .foregroundColor(.white.opacity(0.9))
+                        .multilineTextAlignment(.center)
                 }
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.primary)
-                .padding(.horizontal)
+                .padding(.top, 40)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
+                .background(
+                    LinearGradient(
+                        colors: [.red.opacity(0.8), .red.opacity(0.6)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
 
-                VStack(spacing: 10) {
-                    Button(action: { dial(primaryNumber) }) {
-                        HStack { Image(systemName: "phone.fill"); Text("Chiama " + primaryNumber) }
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    let extraNumber = (overrideExtraNumber ?? crisisExtraNumber).trimmingCharacters(in: .whitespacesAndNewlines)
-                    let extraLabel = (overrideExtraLabel ?? crisisExtraLabel)
-                    if !extraNumber.isEmpty {
-                        Button(action: { dial(extraNumber) }) {
-                            HStack {
-                                Image(systemName: "phone");
-                                Text((extraLabel.isEmpty ? "Numero di supporto" : extraLabel) + " " + extraNumber)
-                            }.frame(maxWidth: .infinity)
+                // Content
+                VStack(spacing: 20) {
+                    // Custom message or default
+                    VStack(spacing: 8) {
+                        if let msg = customMessage, !msg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Text(msg)
+                                .font(.body)
+                                .multilineTextAlignment(.center)
+                        } else {
+                            Text("È importante che tu parli con una persona reale in grado di aiutarti. Questi numeri sono gestiti da professionisti preparati:")
+                                .font(.body)
+                                .multilineTextAlignment(.center)
                         }
-                        .buttonStyle(.bordered)
                     }
-                }
-                .padding(.horizontal)
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 20)
 
-                Button("Chiudi") { isPresented = false }
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 6)
+                    // Emergency contacts
+                    VStack(spacing: 12) {
+                        ForEach(emergencyContacts) { contact in
+                            EmergencyButton(contact: contact) {
+                                dial(contact.number)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    // Additional info
+                    VStack(spacing: 8) {
+                        Text("📞 Puoi chiamare subito con un tap")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("Questi servizi sono gratuiti e riservati")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 10)
+                }
+                .padding(.vertical, 20)
+                .background(Color(.systemBackground))
+
+                // Close button
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isPresented = false
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "xmark.circle.fill")
+                        Text("Chiudi")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.gray.opacity(0.8))
+                }
             }
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 18).fill(Color(.systemBackground)))
-            .padding()
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(radius: 20)
+            .padding(.horizontal, 20)
         }
+        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: isPresented)
     }
 
     private func dial(_ number: String) {
         let digits = number.filter { $0.isNumber || $0 == "+" }
         guard let url = URL(string: "tel://\(digits)") else { return }
+
+        // Aggiungi un feedback tattile quando l'utente tocca per chiamare
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+
         UIApplication.shared.open(url)
+    }
+}
+
+// MARK: - Supporting Types
+
+struct EmergencyContact: Identifiable {
+    let id = UUID()
+    let number: String
+    let label: String
+    let description: String
+    let icon: String
+    let color: Color
+}
+
+struct EmergencyButton: View {
+    let contact: EmergencyContact
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                // Icon
+                Image(systemName: contact.icon)
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        Circle()
+                            .fill(contact.color)
+                            .shadow(color: contact.color.opacity(0.3), radius: 4, x: 0, y: 2)
+                    )
+
+                // Info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(contact.label)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text(contact.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text(contact.number)
+                        .font(.caption.monospaced())
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Call icon
+                Image(systemName: "phone.fill")
+                    .font(.title3)
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        Circle()
+                            .fill(Color.green)
+                    )
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.secondarySystemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(contact.color.opacity(0.2), lineWidth: 1)
+                    )
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+        }
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

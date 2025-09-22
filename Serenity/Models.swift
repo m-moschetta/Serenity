@@ -89,7 +89,7 @@ final class Conversation {
     @Relationship(deleteRule: .cascade)
     var memories: [MemorySummary] = []
     
-    init(id: UUID = UUID(), title: String = "Parla con Serenity", createdAt: Date = .now, updatedAt: Date = .now) {
+    init(id: UUID = UUID(), title: String = "Tranquiz", createdAt: Date = .now, updatedAt: Date = .now) {
         self.id = id
         self.title = title
         self.createdAt = createdAt

@@ -24,18 +24,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		EDF6C0742E631A5D00D8DA33 /* Serenity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Serenity.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		EDF6C0852E631A5E00D8DA33 /* SerenityTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SerenityTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		EDF6C08F2E631A5E00D8DA33 /* SerenityUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SerenityUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDF6C0742E631A5D00D8DA33 /* Tranquiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tranquiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDF6C0852E631A5E00D8DA33 /* TranquizTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TranquizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDF6C08F2E631A5E00D8DA33 /* TranquizUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TranquizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EDF6C0972E631A5E00D8DA33 /* Exceptions for "Serenity" folder in "Serenity" target */ = {
+		EDF6C0972E631A5E00D8DA33 /* Exceptions for "Serenity" folder in "Tranquiz" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = EDF6C0732E631A5D00D8DA33 /* Serenity */;
+			target = EDF6C0732E631A5D00D8DA33 /* Tranquiz */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -43,7 +43,7 @@
 		EDF6C0762E631A5D00D8DA33 /* Serenity */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EDF6C0972E631A5E00D8DA33 /* Exceptions for "Serenity" folder in "Serenity" target */,
+				EDF6C0972E631A5E00D8DA33 /* Exceptions for "Serenity" folder in "Tranquiz" target */,
 			);
 			path = Serenity;
 			sourceTree = "<group>";
@@ -98,9 +98,9 @@
 		EDF6C0752E631A5D00D8DA33 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				EDF6C0742E631A5D00D8DA33 /* Serenity.app */,
-				EDF6C0852E631A5E00D8DA33 /* SerenityTests.xctest */,
-				EDF6C08F2E631A5E00D8DA33 /* SerenityUITests.xctest */,
+				EDF6C0742E631A5D00D8DA33 /* Tranquiz.app */,
+				EDF6C0852E631A5E00D8DA33 /* TranquizTests.xctest */,
+				EDF6C08F2E631A5E00D8DA33 /* TranquizUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,9 +108,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EDF6C0732E631A5D00D8DA33 /* Serenity */ = {
+		EDF6C0732E631A5D00D8DA33 /* Tranquiz */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EDF6C0982E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "Serenity" */;
+			buildConfigurationList = EDF6C0982E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "Tranquiz" */;
 			buildPhases = (
 				EDF6C0702E631A5D00D8DA33 /* Sources */,
 				EDF6C0712E631A5D00D8DA33 /* Frameworks */,
@@ -123,16 +123,16 @@
 			fileSystemSynchronizedGroups = (
 				EDF6C0762E631A5D00D8DA33 /* Serenity */,
 			);
-			name = Serenity;
+			name = Tranquiz;
 			packageProductDependencies = (
 			);
 			productName = Serenity;
-			productReference = EDF6C0742E631A5D00D8DA33 /* Serenity.app */;
+			productReference = EDF6C0742E631A5D00D8DA33 /* Tranquiz.app */;
 			productType = "com.apple.product-type.application";
 		};
-		EDF6C0842E631A5E00D8DA33 /* SerenityTests */ = {
+		EDF6C0842E631A5E00D8DA33 /* TranquizTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EDF6C09D2E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "SerenityTests" */;
+			buildConfigurationList = EDF6C09D2E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "TranquizTests" */;
 			buildPhases = (
 				EDF6C0812E631A5E00D8DA33 /* Sources */,
 				EDF6C0822E631A5E00D8DA33 /* Frameworks */,
@@ -146,16 +146,16 @@
 			fileSystemSynchronizedGroups = (
 				EDF6C0882E631A5E00D8DA33 /* SerenityTests */,
 			);
-			name = SerenityTests;
+			name = TranquizTests;
 			packageProductDependencies = (
 			);
 			productName = SerenityTests;
-			productReference = EDF6C0852E631A5E00D8DA33 /* SerenityTests.xctest */;
+			productReference = EDF6C0852E631A5E00D8DA33 /* TranquizTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		EDF6C08E2E631A5E00D8DA33 /* SerenityUITests */ = {
+		EDF6C08E2E631A5E00D8DA33 /* TranquizUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EDF6C0A02E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "SerenityUITests" */;
+			buildConfigurationList = EDF6C0A02E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "TranquizUITests" */;
 			buildPhases = (
 				EDF6C08B2E631A5E00D8DA33 /* Sources */,
 				EDF6C08C2E631A5E00D8DA33 /* Frameworks */,
@@ -169,11 +169,11 @@
 			fileSystemSynchronizedGroups = (
 				EDF6C0922E631A5E00D8DA33 /* SerenityUITests */,
 			);
-			name = SerenityUITests;
+			name = TranquizUITests;
 			packageProductDependencies = (
 			);
 			productName = SerenityUITests;
-			productReference = EDF6C08F2E631A5E00D8DA33 /* SerenityUITests.xctest */;
+			productReference = EDF6C08F2E631A5E00D8DA33 /* TranquizUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -199,7 +199,7 @@
 					};
 				};
 			};
-			buildConfigurationList = EDF6C06F2E631A5D00D8DA33 /* Build configuration list for PBXProject "Serenity" */;
+			buildConfigurationList = EDF6C06F2E631A5D00D8DA33 /* Build configuration list for PBXProject "Tranquiz" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -213,9 +213,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				EDF6C0732E631A5D00D8DA33 /* Serenity */,
-				EDF6C0842E631A5E00D8DA33 /* SerenityTests */,
-				EDF6C08E2E631A5E00D8DA33 /* SerenityUITests */,
+				EDF6C0732E631A5D00D8DA33 /* Tranquiz */,
+				EDF6C0842E631A5E00D8DA33 /* TranquizTests */,
+				EDF6C08E2E631A5E00D8DA33 /* TranquizUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -271,12 +271,12 @@
 /* Begin PBXTargetDependency section */
 		EDF6C0872E631A5E00D8DA33 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = EDF6C0732E631A5D00D8DA33 /* Serenity */;
+			target = EDF6C0732E631A5D00D8DA33 /* Tranquiz */;
 			targetProxy = EDF6C0862E631A5E00D8DA33 /* PBXContainerItemProxy */;
 		};
 		EDF6C0912E631A5E00D8DA33 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = EDF6C0732E631A5D00D8DA33 /* Serenity */;
+			target = EDF6C0732E631A5D00D8DA33 /* Tranquiz */;
 			targetProxy = EDF6C0902E631A5E00D8DA33 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -511,7 +511,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Serenity.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Serenity";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tranquiz.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tranquiz";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -537,7 +537,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Serenity.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Serenity";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tranquiz.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tranquiz";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -595,7 +595,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		EDF6C06F2E631A5D00D8DA33 /* Build configuration list for PBXProject "Serenity" */ = {
+		EDF6C06F2E631A5D00D8DA33 /* Build configuration list for PBXProject "Tranquiz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EDF6C09B2E631A5E00D8DA33 /* Debug */,
@@ -604,7 +604,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EDF6C0982E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "Serenity" */ = {
+		EDF6C0982E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "Tranquiz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EDF6C0992E631A5E00D8DA33 /* Debug */,
@@ -613,7 +613,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EDF6C09D2E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "SerenityTests" */ = {
+		EDF6C09D2E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "TranquizTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EDF6C09E2E631A5E00D8DA33 /* Debug */,
@@ -622,7 +622,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EDF6C0A02E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "SerenityUITests" */ = {
+		EDF6C0A02E631A5E00D8DA33 /* Build configuration list for PBXNativeTarget "TranquizUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EDF6C0A12E631A5E00D8DA33 /* Debug */,

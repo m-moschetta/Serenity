@@ -45,6 +45,7 @@ struct SingleChatView: View {
     @State private var photoItems: [PhotosPickerItem] = []
     @State private var pendingImages: [UIImage] = []
     @State private var fullScreenImage: UIImage?
+    @State private var textEditorHeight: CGFloat = 32
     @AppStorage("aiProvider") private var aiProvider: String = "openai"
     @AppStorage("openaiModel") private var openaiModel: String = "gpt-5"
     @AppStorage("mistralModel") private var mistralModel: String = "mistral-large-latest"
@@ -87,87 +88,50 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
     @State private var crisisCustomMessage: String? = nil
     
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        let visible = conversation.messages
-                            .filter { $0.role != .system }
-                            .sorted(by: { $0.createdAt < $1.createdAt })
-                        ForEach(Array(visible.enumerated()), id: \.element.id) { index, msg in
-                            if index == 0 || !Calendar.current.isDate(visible[index - 1].createdAt, inSameDayAs: msg.createdAt) {
-                                DateSeparator(date: msg.createdAt)
-                            }
-                            ChatBubble(message: msg, onImageTap: { img in fullScreenImage = img })
-                                .id(msg.id)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                }
-                .onChange(of: conversation.messages.count) { _ in
-                    if let last = conversation.messages.sorted(by: { $0.createdAt < $1.createdAt }).last {
-                        withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-                    }
-                }
-                .onChange(of: photoItems) { _ in
-                    Task { await handlePhotoPickerItems() }
-                }
-            }
-            Divider()
-            if !pendingImages.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(pendingImages.enumerated()), id: \.offset) { idx, img in
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: img)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 72, height: 72)
-                                    .clipped()
-                                    .cornerRadius(12)
-                                Button {
-                                    pendingImages.remove(at: idx)
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill").foregroundStyle(.white).background(.black.opacity(0.4)).clipShape(Circle())
+        ZStack {
+            ChatStyle.background
+                .ignoresSafeArea()
+            VStack(spacing: 0) {
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(alignment: .leading, spacing: 8) {
+                            let visible = conversation.messages
+                                .filter { $0.role != .system }
+                                .sorted(by: { $0.createdAt < $1.createdAt })
+                            ForEach(Array(visible.enumerated()), id: \.element.id) { index, msg in
+                                if index == 0 || !Calendar.current.isDate(visible[index - 1].createdAt, inSameDayAs: msg.createdAt) {
+                                    DateSeparator(date: msg.createdAt)
                                 }
-                                .offset(x: 6, y: -6)
+                                ChatBubble(message: msg, onImageTap: { img in fullScreenImage = img })
+                                    .id(msg.id)
                             }
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.top, 8)
+                        .padding(.bottom, 18)
                     }
-                    .padding(.horizontal, 12)
-                }
-                .frame(height: 80)
-            }
-            HStack(alignment: .bottom, spacing: 8) {
-                // Attachments
-                Menu {
-                    Button {
-                        showPhotoPicker = true
-                    } label: { Label("Libreria foto", systemImage: "photo") }
-                    Button {
-                        showCamera = true
-                    } label: { Label("Fotocamera", systemImage: "camera") }
-                } label: {
-                    Image(systemName: "paperclip").font(.title3)
-                }
-                TextEditor(text: $input)
-                    .frame(minHeight: 16, maxHeight: 40)
-                    .padding(6)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(alignment: .topLeading) {
-                        if input.isEmpty { Text("Scrivi un messaggio…").foregroundStyle(.secondary).padding(10) }
+                    .background(Color.clear)
+                    .scrollDismissesKeyboard(.interactively)
+                    .onChange(of: conversation.messages.count) { _ in
+                        if let last = conversation.messages.sorted(by: { $0.createdAt < $1.createdAt }).last {
+                            withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+                        }
                     }
-                Button(action: send) {
-                    Image(systemName: sending ? "hourglass" : "paperplane.fill")
-                        .font(.title3)
+                    .onChange(of: photoItems) { _ in
+                        Task { await handlePhotoPickerItems() }
+                    }
                 }
-                .disabled(sending || (input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && pendingImages.isEmpty))
+                // Removed direct composer here
             }
-            .padding(.all, 12)
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .safeAreaInset(edge: .bottom) {
+            composerBackground
         }
         .navigationTitle(conversation.title)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.clear, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { exportConversation() } label: { Image(systemName: "square.and.arrow.up") }
@@ -182,12 +146,8 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
             }
         }
         .onAppear {
-            if conversation.messages.isEmpty {
-                let sys = ChatMessage(role: .system, content: systemPrompt())
-                sys.conversation = conversation
-                conversation.messages.append(sys)
-                try? context.save()
-            }
+            // Il prompt di sistema è ora gestito automaticamente da AIService
+            // Non è più necessario aggiungere manualmente un messaggio di sistema
         }
         .sheet(isPresented: $showShare) {
             if let url = exportURL { ShareSheet(items: [url]) }
@@ -215,6 +175,145 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
         
     }
     
+    private var composer: some View {
+        VStack(spacing: 10) {
+            if !pendingImages.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Array(pendingImages.enumerated()), id: \.offset) { idx, img in
+                            ZStack(alignment: .topTrailing) {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 70, height: 70)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
+                                Button {
+                                    pendingImages.remove(at: idx)
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(Color.white, Color.black.opacity(0.28))
+                                        .padding(4)
+                                }
+                                .background(.ultraThinMaterial, in: Circle())
+                                .offset(x: 8, y: -8)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                }
+                .frame(height: 80)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            HStack(alignment: .bottom, spacing: 8) {
+                Menu {
+                    Button {
+                        showPhotoPicker = true
+                    } label: { Label("Libreria foto", systemImage: "photo") }
+                    Button {
+                        showCamera = true
+                    } label: { Label("Fotocamera", systemImage: "camera") }
+                } label: {
+                    Image(systemName: "paperclip")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(width: 34, height: 34)
+                        .foregroundStyle(ChatStyle.accentPurpleDark)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(ChatStyle.composerBackground)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(ChatStyle.composerStroke)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 2)
+                ZStack(alignment: .topLeading) {
+                    GrowingTextView(
+                        text: $input,
+                        minHeight: 32,
+                        maxHeight: 100,
+                        font: .systemFont(ofSize: 16),
+                        textColor: UIColor.label,
+                        textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+                    ) { newHeight in
+                        textEditorHeight = newHeight
+                    }
+                    .frame(height: textEditorHeight)
+
+                    if input.isEmpty {
+                        Text("Scrivi un messaggio…")
+                            .foregroundStyle(Color.gray)
+                            .font(.system(size: 16))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.black.opacity(0.08))
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                Button(action: send) {
+                    Image(systemName: sending ? "hourglass" : "paperplane.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                        .frame(width: 36, height: 36)
+                        .foregroundStyle(Color.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(ChatStyle.sendButtonGradient)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: Color.black.opacity(0.15), radius: 6, x: 0, y: 4)
+                }
+                .disabled(isSendDisabled)
+                .opacity(isSendDisabled ? 0.4 : 1)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(ChatStyle.composerBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(ChatStyle.composerStroke)
+                    )
+            )
+            .shadow(color: Color.black.opacity(0.07), radius: 8, x: 0, y: 3)
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 8)
+    }
+    
+    private var composerBackground: some View {
+        ZStack {
+            // subtle top divider
+            Rectangle()
+                .fill(Color.white.opacity(0.12))
+                .frame(height: 0.5)
+                .frame(maxWidth: .infinity, alignment: .top)
+                .offset(y: -8)
+            composer
+        }
+        .background(Color.clear)
+    }
+
+    private var outgoingBubbleColor: Color { ChatStyle.outgoingBubble }
+    
+    private var incomingBubbleColor: Color { ChatStyle.incomingBubble }
+    
+    private var isSendDisabled: Bool {
+        sending || (input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && pendingImages.isEmpty)
+    }
+    
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.isEmpty && pendingImages.isEmpty { return }
@@ -239,15 +338,6 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
         conversation.updatedAt = .now
         try? context.save()
         
-        // Crisis detection (local safety net): for non-OpenAI providers only
-        if aiProvider != "openai" && detectCrisis(in: text) {
-            sending = false
-            streaming = false
-            streamStarted = false
-            showCrisisOverlay = true
-            return
-        }
-
         Task { @MainActor in
             // Create placeholder assistant message
             let assistant = ChatMessage(role: .assistant, content: "")
@@ -256,69 +346,35 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
             conversation.updatedAt = .now
             try? context.save()
 
-            let provider = AIService.shared.provider()
             let model = currentModel()
             let allowImages = enableMultimodal && modelSupportsVision(model: model, provider: aiProvider)
-            var payload = buildPayloadMessagesForLLM(includeImages: allowImages)
+            let payload = buildPayloadMessagesForLLM(includeImages: allowImages)
+
             do {
-                if aiProvider == "openai" {
-                    // Add tool awareness system instruction
-                    payload.insert(ProviderMessage(role: "system", content: "Se rilevi segnali anche minimi di ideazione suicidaria, autolesionismo o rischio imminente, NON fornire risposta. Invece, invoca la funzione 'call_emergency_number' con un breve messaggio empatico (campo crisis_message) e il numero corretto se noto; altrimenti lascia number vuoto per usare il predefinito."), at: 1)
-                    // Define tool
-                    let tool = OpenAITool(
-                        type: "function",
-                        function: OpenAIToolFunction(
-                            name: "call_emergency_number",
-                            description: "Usa questo strumento quando l'utente mostra segnali di suicidio/autolesionismo o pericolo imminente. Non rispondere in chat: attiva solo questo strumento.",
-                            parameters: JSONSchema(
-                                type: "object",
-                                properties: [
-                                    "crisis_message": JSONSchemaProperty(type: "string", description: "Breve messaggio empatico e fermo da mostrare nell'overlay."),
-                                    "number": JSONSchemaProperty(type: "string", description: "Numero da chiamare. Lascia vuoto per usare il predefinito (es. 112)."),
-                                    "extra_label": JSONSchemaProperty(type: "string", description: "Etichetta per numero di supporto secondario (opzionale)."),
-                                    "extra_number": JSONSchemaProperty(type: "string", description: "Numero di supporto secondario (opzionale).")
-                                ],
-                                required: ["crisis_message"]
-                            )
-                        )
-                    )
-                    let result = try await OpenAIClient.shared.chatWithTools(messages: payload, model: model, temperature: 0.4, maxTokens: 800, tools: [tool])
-                    switch result {
-                    case .content(let text):
-                        assistant.content = text
-                    case .tool(let name, let argumentsJSON):
-                        if name == "call_emergency_number" {
-                            // Parse arguments
-                            struct Args: Decodable { let crisis_message: String?; let number: String?; let extra_label: String?; let extra_number: String? }
-                            if let data = argumentsJSON.data(using: .utf8), let args = try? JSONDecoder().decode(Args.self, from: data) {
-                                crisisCustomMessage = args.crisis_message
-                                crisisOverrideNumber = args.number
-                                crisisOverrideExtraLabel = args.extra_label
-                                crisisOverrideExtraNumber = args.extra_number
-                            }
-                            // Show overlay and stop
-                            showCrisisOverlay = true
-                            // Remove placeholder assistant message (keep conversation integrity minimal)
-                            if let idx = conversation.messages.firstIndex(where: { $0.id == assistant.id }) {
-                                conversation.messages.remove(at: idx)
-                            }
-                            try? context.save()
-                            sending = false
-                            streaming = false
-                            return
-                        } else {
-                            assistant.content = ""
-                        }
+                // Use the new AIService with integrated crisis detection and therapeutic prompt
+                let reply = try await AIService.shared.chatWithCrisisDetection(messages: payload, model: model, temperature: 0.4, maxTokens: 800)
+
+                // Check if the response is a crisis response (contains emergency numbers)
+                if reply.contains("📞 Dove chiedere aiuto") || reply.contains("Telefono Amico") {
+                    // This is a crisis response, show overlay instead of displaying the message
+                    showCrisisOverlay = true
+                    crisisCustomMessage = reply
+                    // Remove placeholder assistant message
+                    if let idx = conversation.messages.firstIndex(where: { $0.id == assistant.id }) {
+                        conversation.messages.remove(at: idx)
                     }
-                } else {
-                    let reply = try await provider.chat(messages: payload, model: model, temperature: 0.4, maxTokens: 800)
-                    assistant.content = reply
+                    try? context.save()
+                    sending = false
+                    streaming = false
+                    return
                 }
+
+                assistant.content = reply
             } catch {
                 // Fallback: retry without images
                 do {
                     let textOnly = buildPayloadMessagesForLLM(includeImages: false)
-                    let text = try await provider.chat(messages: textOnly, model: model, temperature: 0.4, maxTokens: 800)
+                    let text = try await AIService.shared.chatWithCrisisDetection(messages: textOnly, model: model, temperature: 0.4, maxTokens: 800)
                     assistant.content = text
                 } catch {
                     // Fallback 2: prova altri modelli
@@ -328,7 +384,7 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                         let allowVision = enableMultimodal && modelSupportsVision(model: candidate, provider: aiProvider)
                         let msg = buildPayloadMessagesForLLM(includeImages: allowVision)
                         do {
-                            let text = try await provider.chat(messages: msg, model: candidate, temperature: 0.4, maxTokens: 800)
+                            let text = try await AIService.shared.chatWithCrisisDetection(messages: msg, model: candidate, temperature: 0.4, maxTokens: 800)
                             assistant.content = text
                             success = true
                             break
@@ -348,7 +404,7 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
     }
     
     private func systemPrompt() -> String {
-        storedSystemPrompt
+        TherapeuticPrompt.systemPrompt
     }
 
     private func currentModel() -> String {
@@ -369,9 +425,8 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
         do {
             let contextPreview = msgs.suffix(60).map { "\($0.role == .user ? "Utente" : "Assistente"): \($0.content)" }.joined(separator: "\n")
             let prompt = storedSummaryPrompt + "\n\n" + contextPreview
-            let provider = AIService.shared.provider()
             let model = currentModel()
-            let summary = try await provider.chat(messages: [
+            let summary = try await AIService.shared.provider().chat(messages: [
                 ProviderMessage(role: "system", content: "Sei un assistente che distilla conversazioni in riassunti utili e organizzati."),
                 ProviderMessage(role: "user", content: prompt)
             ], model: model, temperature: 0.3, maxTokens: 600)
@@ -400,15 +455,13 @@ extension SingleChatView {
     
     private func buildPayloadMessagesForLLM(includeImages: Bool) -> [ProviderMessage] {
         var result: [ProviderMessage] = []
-        // system prompt
-        result.append(ProviderMessage(role: "system", content: storedSystemPrompt))
         // memories
         let memories = conversation.memories.sorted(by: { $0.createdAt > $1.createdAt }).prefix(3)
         if !memories.isEmpty {
             let memText = memories.map { "- [\($0.createdAt.formatted())] \n\($0.content)" }.joined(separator: "\n\n")
             result.append(ProviderMessage(role: "system", content: "Memoria della conversazione (riassunti recenti):\n\n\(memText)"))
         }
-        // dialogue
+        // dialogue (excluding system messages as they're handled by AIService)
         for m in conversation.messages.sorted(by: { $0.createdAt < $1.createdAt }) where m.role != .system {
             var text = m.content
             if !m.attachments.isEmpty {
@@ -493,22 +546,7 @@ extension SingleChatView {
     }
 }
 
-extension SingleChatView {
-    fileprivate func detectCrisis(in text: String) -> Bool {
-        let t = text.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        let keywords = [
-            "suicid", // suicidio, suicidarmi, suicidare
-            "mi uccido", "uccidermi", "ammazzarmi", "mi ammazzo",
-            "togliermi la vita",
-            "non voglio piu vivere", "non voglio più vivere",
-            "autoles", // autolesionismo
-            "farmi del male", "farmi male", "ferirmi", "tagliarmi",
-            "voglio morire", "vorrei morire", "sto per farmi del male"
-        ]
-        for k in keywords { if t.contains(k) { return true } }
-        return false
-    }
-}
+// Rilevamento di crisi ora gestito centralmente da CrisisDetection
 
 struct ChatBubble: View {
     let message: ChatMessage
@@ -517,36 +555,24 @@ struct ChatBubble: View {
     var isUser: Bool { message.role == .user }
     
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            if isUser { Spacer(minLength: 48) }
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
-                Group {
-                if hasImage(message) {
-                    imageBubble(message)
-                } else if message.content.isEmpty && !isUser {
-                    HStack(spacing: 6) {
-                        Circle().frame(width: 6, height: 6)
-                        Circle().frame(width: 6, height: 6)
-                        Circle().frame(width: 6, height: 6)
-                    }
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 6)
-                } else {
-                    Text(message.content)
-                        .foregroundStyle(isUser ? .white : .primary)
-                        .textSelection(.enabled)
-                }
-                }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(isUser ? Color.accentColor : Color(.secondarySystemBackground))
-                .clipShape(ChatBubbleShape(isUser: isUser))
+        HStack(alignment: .bottom, spacing: 12) {
+            if isUser { Spacer(minLength: 52) }
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
+                bubbleContent
+                    .padding(.vertical, hasImage(message) ? 8 : 10)
+                    .padding(.horizontal, 12)
+                    .background(bubbleBackground)
+                    .overlay(
+                        ChatBubbleShape(isUser: isUser)
+                            .stroke(bubbleStrokeColor, lineWidth: 1)
+                    )
+                    .shadow(color: bubbleShadowColor, radius: 3, x: 0, y: 1)
                 Text(timeString(message.createdAt))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .padding(isUser ? .trailing : .leading, 6)
             }
-            if !isUser { Spacer(minLength: 48) }
+            if !isUser { Spacer(minLength: 52) }
         }
         .contextMenu {
             if !message.content.isEmpty {
@@ -555,6 +581,42 @@ struct ChatBubble: View {
         }
     }
     
+    @ViewBuilder
+    private var bubbleContent: some View {
+        if hasImage(message) {
+            imageBubble(message)
+        } else if message.content.isEmpty && !isUser {
+            HStack(spacing: 6) {
+                Circle().frame(width: 6, height: 6)
+                Circle().frame(width: 6, height: 6)
+                Circle().frame(width: 6, height: 6)
+            }
+            .foregroundStyle(.secondary)
+            .padding(.vertical, 2)
+        } else {
+            Text(message.content)
+                .foregroundStyle(textColor)
+                .textSelection(.enabled)
+        }
+    }
+
+    private var bubbleBackground: some View {
+        ChatBubbleShape(isUser: isUser)
+            .fill(isUser ? ChatStyle.outgoingBubble : ChatStyle.incomingBubble)
+    }
+    
+    private var bubbleStrokeColor: Color {
+        Color.black.opacity(0.08)
+    }
+    
+    private var bubbleShadowColor: Color {
+        Color.black.opacity(isUser ? 0.12 : 0.05)
+    }
+    
+    private var textColor: Color {
+        Color.black.opacity(0.87)
+    }
+
     private func hasImage(_ msg: ChatMessage) -> Bool { !msg.attachments.isEmpty }
     
     @ViewBuilder
@@ -565,18 +627,52 @@ struct ChatBubble: View {
                     Image(uiImage: ui)
                         .resizable()
                         .scaledToFill()
-                        .frame(maxWidth: 280)
-                        .clipped()
-                        .cornerRadius(16)
+                        .frame(maxWidth: 300)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(Color.black.opacity(0.08), lineWidth: 0.8)
+                        )
+                        .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 6)
                         .onTapGesture { onImageTap(ui) }
                 }
             }
             if !msg.content.isEmpty {
                 Text(msg.content)
-                    .foregroundStyle(isUser ? .white : .primary)
+                    .foregroundStyle(textColor)
             }
         }
     }
+}
+
+fileprivate enum ChatStyle {
+    // Purple gradient background with good contrast
+    static let background: LinearGradient = LinearGradient(
+        colors: [
+            Color(red: 82/255, green: 36/255, blue: 154/255),   // deep purple
+            Color(red: 140/255, green: 82/255, blue: 255/255)   // vivid purple
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    // Accents tuned for contrast on purple
+    static let accentPurpleLight: Color = Color(red: 190/255, green: 160/255, blue: 255/255)
+    static let accentPurpleDark: Color = Color(red: 120/255, green: 60/255, blue: 220/255)
+
+    static let sendButtonGradient: LinearGradient = LinearGradient(
+        colors: [accentPurpleLight, accentPurpleDark],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    // Bubble colors: ensure strong contrast with text
+    static let outgoingBubble: Color = Color.white // user messages on white with dark text
+    static let incomingBubble: Color = Color.white.opacity(0.9) // assistant slightly tinted but still high contrast
+
+    // Composer container background on purple
+    static let composerBackground: Color = Color.white.opacity(0.95)
+    static let composerStroke: Color = Color.black.opacity(0.06)
 }
 
 private func timeString(_ date: Date) -> String {
@@ -600,10 +696,17 @@ struct DateSeparator: View {
     let date: Date
     var body: some View {
         Text(label(for: date))
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .padding(.vertical, 4)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(Color.white.opacity(0.9))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.15), in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.25))
+            )
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
     }
     private func label(for date: Date) -> String {
         let cal = Calendar.current
@@ -654,7 +757,6 @@ struct MemoriesView: View {
         let contextPreview = msgs.suffix(60).map { "\($0.role == .user ? "Utente" : "Assistente"): \($0.content)" }.joined(separator: "\n")
         do {
             let prompt = storedSummaryPrompt + "\n\n" + contextPreview
-            let provider = AIService.shared.provider()
             let model: String
             if aiProvider == "mistral" {
                 model = mistralModel
@@ -663,7 +765,7 @@ struct MemoriesView: View {
             } else {
                 model = openaiModel
             }
-            let summary = try await provider.chat(messages: [
+            let summary = try await AIService.shared.provider().chat(messages: [
                 ProviderMessage(role: "system", content: "Sei un assistente che distilla conversazioni in riassunti utili e organizzati."),
                 ProviderMessage(role: "user", content: prompt)
             ], model: model, temperature: 0.3, maxTokens: 600)
@@ -676,3 +778,4 @@ struct MemoriesView: View {
         }
     }
 }
+
