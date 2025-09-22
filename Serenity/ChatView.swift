@@ -216,47 +216,93 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                         showCamera = true
                     } label: { Label("Fotocamera", systemImage: "camera") }
                 } label: {
-                    Image(systemName: "paperclip")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 34, height: 34)
-                        .foregroundStyle(ChatStyle.accentPurpleDark)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(ChatStyle.composerBackground)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(ChatStyle.composerStroke)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    if #available(iOS 26.0, *) {
+                        Image(systemName: "paperclip")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(width: 34, height: 34)
+                            .foregroundStyle(ChatStyle.accentPurpleDark)
+                            .background(
+                                Color.clear
+                                    .glassEffect(.regular, in: .rect(cornerRadius: 12))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(ChatStyle.composerStroke)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    } else {
+                        Image(systemName: "paperclip")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(width: 34, height: 34)
+                            .foregroundColor(ChatStyle.accentPurpleDark)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.white.opacity(0.2))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(ChatStyle.composerStroke)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
                 }
                 .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 2)
                 ZStack(alignment: .topLeading) {
                     // Use a fixed dark text color to ensure readability on the always-white input background (especially in dark mode)
-                    GrowingTextView(
-                        text: $input,
-                        minHeight: 32,
-                        maxHeight: 100,
-                        font: .systemFont(ofSize: 16),
-                        textColor: UIColor.black,
-                        textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-                    ) { newHeight in
-                        textEditorHeight = newHeight
+                    if #available(iOS 26.0, *) {
+                        GrowingTextView(
+                            text: $input,
+                            minHeight: 32,
+                            maxHeight: 100,
+                            font: .systemFont(ofSize: 16),
+                            textColor: UIColor.white,
+                            textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+                        ) { newHeight in
+                            textEditorHeight = newHeight
+                        }
+                        .frame(height: textEditorHeight)
+                    } else {
+                        GrowingTextView(
+                            text: $input,
+                            minHeight: 32,
+                            maxHeight: 100,
+                            font: .systemFont(ofSize: 16),
+                            textColor: UIColor.black,
+                            textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+                        ) { newHeight in
+                            textEditorHeight = newHeight
+                        }
+                        .frame(height: textEditorHeight)
                     }
-                    .frame(height: textEditorHeight)
 
                     if input.isEmpty {
-                        Text("Scrivi un messaggio…")
-                            .foregroundStyle(Color.gray)
-                            .font(.system(size: 16))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .allowsHitTesting(false)
+                        if #available(iOS 26.0, *) {
+                            Text("Scrivi un messaggio…")
+                                .foregroundStyle(Color.white.opacity(0.7))
+                                .font(.system(size: 16))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .allowsHitTesting(false)
+                        } else {
+                            Text("Scrivi un messaggio…")
+                                .foregroundStyle(Color.gray)
+                                .font(.system(size: 16))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .allowsHitTesting(false)
+                        }
                     }
                 }
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white)
+                    Group {
+                        if #available(iOS 26.0, *) {
+                            Color.clear
+                                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+                        } else {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(ChatStyle.composerBackground)
+                        }
+                    }
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -269,8 +315,15 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                         .frame(width: 36, height: 36)
                         .foregroundStyle(Color.white)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(ChatStyle.sendButtonGradient)
+                            Group {
+                                if #available(iOS 26.0, *) {
+                                    Color.clear
+                                        .glassEffect(.regular.tint(ChatStyle.accentPurpleDark.opacity(0.25)).interactive(), in: .rect(cornerRadius: 16))
+                                } else {
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(ChatStyle.accentPurpleDark)
+                                }
+                            }
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .shadow(color: Color.black.opacity(0.15), radius: 6, x: 0, y: 4)
@@ -281,12 +334,23 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(ChatStyle.composerBackground)
-                    .overlay(
+                Group {
+                    if #available(iOS 26.0, *) {
+                        Color.clear
+                            .glassEffect(.regular.tint(ChatStyle.accentPurpleLight.opacity(0.15)).interactive(), in: .rect(cornerRadius: 24))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                    .stroke(ChatStyle.composerStroke)
+                            )
+                    } else {
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(ChatStyle.composerStroke)
-                    )
+                            .fill(ChatStyle.composerBackground)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                    .stroke(ChatStyle.composerStroke)
+                            )
+                    }
+                }
             )
             .shadow(color: Color.black.opacity(0.07), radius: 8, x: 0, y: 3)
         }
@@ -601,9 +665,15 @@ struct ChatBubble: View {
         }
     }
 
+    @ViewBuilder
     private var bubbleBackground: some View {
-        ChatBubbleShape(isUser: isUser)
-            .fill(isUser ? ChatStyle.outgoingBubble : ChatStyle.incomingBubble)
+        if #available(iOS 26.0, *) {
+            Color.clear
+                .glassEffect(.regular, in: .rect(cornerRadius: 18))
+        } else {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isUser ? ChatStyle.outgoingBubble : ChatStyle.incomingBubble)
+        }
     }
     
     private var bubbleStrokeColor: Color {
@@ -615,7 +685,11 @@ struct ChatBubble: View {
     }
     
     private var textColor: Color {
-        Color.black.opacity(0.87)
+        if #available(iOS 26.0, *) {
+            return Color.white
+        } else {
+            return Color.black.opacity(0.87)
+        }
     }
 
     private func hasImage(_ msg: ChatMessage) -> Bool { !msg.attachments.isEmpty }
@@ -701,7 +775,17 @@ struct DateSeparator: View {
             .foregroundStyle(Color.white.opacity(0.9))
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color.white.opacity(0.15), in: Capsule())
+            .background(
+                Group {
+                    if #available(iOS 26.0, *) {
+                        Color.clear
+                            .glassEffect(.regular.tint(.white.opacity(0.2)), in: .capsule)
+                    } else {
+                        Capsule()
+                            .fill(Color.white.opacity(0.15))
+                    }
+                }
+            )
             .overlay(
                 Capsule()
                     .stroke(Color.white.opacity(0.25))
