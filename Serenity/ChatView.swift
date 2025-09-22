@@ -232,12 +232,13 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                 }
                 .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 2)
                 ZStack(alignment: .topLeading) {
+                    // Use a fixed dark text color to ensure readability on the always-white input background (especially in dark mode)
                     GrowingTextView(
                         text: $input,
                         minHeight: 32,
                         maxHeight: 100,
                         font: .systemFont(ofSize: 16),
-                        textColor: UIColor.label,
+                        textColor: UIColor.black,
                         textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
                     ) { newHeight in
                         textEditorHeight = newHeight
