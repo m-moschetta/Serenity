@@ -23,7 +23,12 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXBuildFile section */
+		EDF6C0A32E631A5E00D8DA33 /* TranquizApp.icon in Resources */ = {isa = PBXBuildFile; fileRef = EDF6C0A32E631A5E00D8DA32 /* TranquizApp.icon */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		EDF6C0A32E631A5E00D8DA32 /* TranquizApp.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = TranquizApp.icon; sourceTree = "<group>"; };
 		EDF6C0742E631A5D00D8DA33 /* Tranquiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tranquiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDF6C0852E631A5E00D8DA33 /* TranquizTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TranquizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDF6C08F2E631A5E00D8DA33 /* TranquizUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TranquizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -92,6 +97,7 @@
 				EDF6C0882E631A5E00D8DA33 /* SerenityTests */,
 				EDF6C0922E631A5E00D8DA33 /* SerenityUITests */,
 				EDF6C0752E631A5D00D8DA33 /* Products */,
+				EDF6C0A32E631A5E00D8DA32 /* TranquizApp.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -225,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EDF6C0A32E631A5E00D8DA33 /* TranquizApp.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,7 +292,8 @@
 		EDF6C0992E631A5E00D8DA33 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TranquizApp;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -331,7 +339,8 @@
 		EDF6C09A2E631A5E00D8DA33 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TranquizApp;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

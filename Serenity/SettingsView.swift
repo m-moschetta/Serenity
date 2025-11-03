@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var mistralKey: String = KeychainService.shared.mistralApiKey ?? ""
     @State private var groqKey: String = KeychainService.shared.groqApiKey ?? ""
     @AppStorage("aiProvider") private var aiProvider: String = "openai" // openai|mistral|groq
-    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5-mini" // default updated
+    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5"
     @AppStorage("mistralModel") private var mistralModel: String = "mistral-large-latest"
     @AppStorage("groqModel") private var groqModel: String = "llama3-8b-8192"
     @AppStorage("systemPrompt") private var systemPrompt: String = """
