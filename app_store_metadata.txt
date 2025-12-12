@@ -1,0 +1,66 @@
+**INFORMAZIONI GENERALI APP STORE CONNECT**
+
+**📱 Informazioni App**
+• **Nome App:** Tranquiz
+• **Bundle ID:** [Il tuo bundle ID attuale, probabilmente it.mariomoschetta.tranquiz o simile]
+• **SKU:** TRANQUIZ001 (puoi scegliere quello che preferisci)
+• **Versione:** 1.0.0
+• **Copyright:** © 2025 Mario Moschetta
+
+**🏷️ Categorie**
+• **Categoria Primaria:** Lifestyle
+• **Sottocategoria:** Health & Fitness → NO! Usa invece: Productivity o Education
+• **Suggerimento:** Usa "Lifestyle" come primaria e "Self Improvement" come secondaria, oppure "Education" > "Self Improvement"
+
+**🎯 Età e Classificazione**
+• **Age Rating:** 4+ (perché è un'app di coaching senza contenuti inappropriati)
+• **Content Descriptors:** Nessuno (non contiene nudity, violence, ecc.)
+
+**💰 Pricing e Disponibilità**
+• **Prezzo:** Gratuita (con acquisti in-app se vuoi monetizzare)
+• **Disponibilità:** Tutti i paesi
+• **Licenza:** Standard Apple Developer Program License
+
+**📞 Informazioni di Contatto per Review**
+• **Nome Contatto:** Mario Moschetta
+• **Email:** [La tua email di contatto]
+• **Telefono:** [Il tuo numero di telefono]
+• **Demo Account:** Non necessario (non richiede login obbligatorio)
+
+**📝 Note per i Reviewer**
+"Se l'app sembra non funzionare, assicurati che sia connessa a internet per le funzionalità AI. L'app richiede connessione per le conversazioni intelligenti."
+
+**🔗 URL Necessarie**
+• **Support URL:** Crea una pagina di supporto sul tuo sito (es. support.tranquiz.app)
+• **Privacy Policy URL:** Obbligatoria! Crea una privacy policy che copra:
+  - Raccolta dati per conversazioni AI
+  - Archiviazione locale sicura
+  - Non condivisione dati con terze parti
+  - Uso di servizi AI esterni (OpenAI, Groq, ecc.)
+
+**🎨 Screenshots Richiesti**
+Per iPhone (almeno 2, massimo 10 per device):
+1. Schermata onboarding/benvenuto
+2. Schermata chat principale
+3. Esempio di conversazione
+4. Schermata impostazioni
+5. Schermata principale con menu
+
+**Dispositivi richiesti:**
+- iPhone 6.9" (iPhone 16 Pro Max)
+- iPhone 6.3" (iPhone 16 Pro)
+- iPhone 6.1" (iPhone 16)
+- iPhone 5.5" (iPhone 8 Plus) - opzionale
+- iPad Pro (12.9-inch) - opzionale
+
+**📹 App Preview (Opzionale ma raccomandato)**
+Video di 15-30 secondi che mostra:
+1. Onboarding
+2. Esempio di conversazione
+3. Funzionalità principali
+
+**⚙️ Build Information**
+• **Minimum iOS Version:** iOS 16.0 (o 15.0 per più compatibilità)
+• **Device Requirements:** iPhone only (a meno che non supporti iPad)
+• **Capabilities:** [Quelle che usi: forse notifiche push, se le hai abilitate]
+

@@ -14,8 +14,11 @@ struct SettingsView: View {
     @State private var saved = false
     @State private var mistralKey: String = KeychainService.shared.mistralApiKey ?? ""
     @State private var groqKey: String = KeychainService.shared.groqApiKey ?? ""
+    @AppStorage("developerMode") private var developerMode: Bool = false
+    @State private var devTapCount: Int = 0
+    @State private var showDevUnlockedAlert: Bool = false
     @AppStorage("aiProvider") private var aiProvider: String = "openai" // openai|mistral|groq
-    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5"
+    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5.2"
     @AppStorage("mistralModel") private var mistralModel: String = "mistral-large-latest"
     @AppStorage("groqModel") private var groqModel: String = "llama3-8b-8192"
     @AppStorage("systemPrompt") private var systemPrompt: String = """
@@ -41,6 +44,12 @@ Se ricevi segnali anche minimi di ideazione suicidaria, autolesionismo, rischio 
 Ogni risposta deve essere profondamente personalizzata. Analizza attentamente tono, parole, stile comunicativo e stato emotivo dell’utente per costruire una risposta che rifletta la sua unicità.
 Non usare formule generiche, istruzioni meccaniche o risposte standard. Mai sembrare "robotico".
 Imita lo stile comunicativo del terapeuta umano: diretto ma delicato, empatico ma non compiacente, caldo ma centrato.
+
+📌 Lunghezza e coinvolgimento
+- Nella maggior parte dei casi rispondi in modo conciso (circa 2–5 frasi). Evita spiegazioni lunghe e liste estese.
+- Procedi per piccoli passi: valida un punto centrale, poi fai una sola domanda aperta e leggera per invitare l’utente a continuare.
+- Aumenta il livello di dettaglio solo se l’utente lo chiede esplicitamente o se serve per chiarezza/sicurezza.
+- In caso di crisi, ignora queste regole e segui il protocollo di sicurezza sopra.
 
 📚 Tecniche da utilizzare
 Applica i seguenti principi psicologici nel rispondere:
@@ -80,6 +89,7 @@ Ti va di dirmi quando è iniziato questo senso di distanza dagli altri?”
 Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano immediato, come sopra.
 """
     @AppStorage("enableMultimodal") private var enableMultimodal: Bool = true
+    @AppStorage("chatTemperature") private var chatTemperature: Double = 0.4
     @AppStorage("summaryPrompt") private var summaryPrompt: String = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
     @State private var promptTapCount = 0
     @State private var showPromptEditor = false
@@ -87,206 +97,249 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
     @State private var diagMessage = ""
     @AppStorage("singleChatMode") private var singleChatMode: Bool = false
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "system" // system|light|dark
+    @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
+    @AppStorage("onboardingSummary") private var onboardingSummary: String = ""
     @ObservedObject private var catalog = ModelCatalog.shared
     
     var body: some View {
         NavigationStack {
             Form {
-                Section("OpenAI") {
-                    HStack {
-                        if showingKey {
-                            TextField("API Key", text: $apiKey)
-                                .textInputAutocapitalization(.never)
-                                .textContentType(.password)
-                                .autocorrectionDisabled()
-                                .foregroundStyle(Color.black)
-                        } else {
-                            SecureField("API Key", text: $apiKey)
-                                .textInputAutocapitalization(.never)
-                                .textContentType(.password)
-                                .autocorrectionDisabled()
-                                .foregroundStyle(Color.black)
-                        }
-                        Button(showingKey ? "Nascondi" : "Mostra") { showingKey.toggle() }
-                    }
-                    Button("Salva") {
-                        KeychainService.shared.apiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                        saved = true
-                    }
-                    .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    if saved { Text("Salvato").foregroundStyle(.secondary) }
-                }
-
-                Section("Mistral") {
-                    SecureField("API Key", text: $mistralKey)
-                        .textInputAutocapitalization(.never)
-                        .textContentType(.password)
-                        .autocorrectionDisabled()
-                        .foregroundStyle(Color.black)
-                    Button("Salva") {
-                        KeychainService.shared.mistralApiKey = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                    .disabled(mistralKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-
-                Section("Groq") {
-                    SecureField("API Key", text: $groqKey)
-                        .textInputAutocapitalization(.never)
-                        .textContentType(.password)
-                        .autocorrectionDisabled()
-                        .foregroundStyle(Color.black)
-                    Button("Salva") {
-                        KeychainService.shared.groqApiKey = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                    .disabled(groqKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    HStack {
-                        Button("Aggiorna modelli Groq") {
-                            Task {
-                                do {
-                                    let typed = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                                    let keyToUse: String
-                                    if !typed.isEmpty {
-                                        keyToUse = typed
-                                    } else if let saved = KeychainService.shared.groqApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                        keyToUse = saved
-                                    } else {
-                                        keyToUse = "" // trigger proxy fallback in ModelCatalog
-                                    }
-                                    try await catalog.refreshGroq(apiKey: keyToUse)
-                                    diagMessage = "Modelli Groq aggiornati: \(catalog.groqModels.count)"
-                                    showingDiagAlert = true
-                                } catch {
-                                    let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
-                                    diagMessage = "Errore: \(last)"
-                                    showingDiagAlert = true
+                Section("Onboarding") {
+                    if onboardingSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("Profilo non ancora compilato.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(onboardingSummary)
+                            .font(.footnote)
+                            .onTapGesture {
+                                guard !developerMode else { return }
+                                devTapCount += 1
+                                if devTapCount >= 10 {
+                                    developerMode = true
+                                    devTapCount = 0
+                                    showDevUnlockedAlert = true
                                 }
                             }
-                        }
-                        Spacer()
+                    }
+                    Button("Ricomincia onboarding") {
+                        OnboardingStorage.shared.clear()
+                        onboardingSummary = ""
+                        onboardingCompleted = false
                     }
                 }
 
-                Section("Provider e Modello") {
-                    Picker("Provider", selection: $aiProvider) {
-                        Text("OpenAI").tag("openai")
-                        Text("Mistral").tag("mistral")
-                        Text("Groq").tag("groq")
-                    }
-                    .pickerStyle(.segmented)
-                    if aiProvider == "openai" {
-                        Picker("Modello", selection: $openaiModel) {
-                            ForEach(catalog.openaiModels, id: \.self) { id in Text(id).tag(id) }
+                if developerMode {
+                    Section("Chat") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Temperatura")
+                                Spacer()
+                                Text(String(format: "%.2f", chatTemperature))
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $chatTemperature, in: 0...1, step: 0.05)
+                            Text("Più bassa = più deterministico, più alta = più creativo.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
+                    }
+
+                    Section("OpenAI") {
                         HStack {
-                            Button("Aggiorna modelli OpenAI") {
-                                Task {
-                                    do {
-                                        let typed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                                        let keyToUse: String
-                                        if !typed.isEmpty {
-                                            keyToUse = typed
-                                        } else if let saved = KeychainService.shared.apiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                            keyToUse = saved
-                                        } else {
-                                            keyToUse = "" // trigger proxy fallback in ModelCatalog
-                                        }
-                                        try await catalog.refreshOpenAI(apiKey: keyToUse)
-                                        diagMessage = "Modelli OpenAI aggiornati: \(catalog.openaiModels.count)"
-                                        showingDiagAlert = true
-                                    } catch {
-                                        let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
-                                        diagMessage = "Errore: \(last)"
-                                        showingDiagAlert = true
-                                    }
-                                }
+                            if showingKey {
+                                TextField("API Key", text: $apiKey)
+                                    .textInputAutocapitalization(.never)
+                                    .textContentType(.password)
+                                    .autocorrectionDisabled()
+                                    .foregroundStyle(Color.black)
+                            } else {
+                                SecureField("API Key", text: $apiKey)
+                                    .textInputAutocapitalization(.never)
+                                    .textContentType(.password)
+                                    .autocorrectionDisabled()
+                                    .foregroundStyle(Color.black)
                             }
-                            Spacer()
+                            Button(showingKey ? "Nascondi" : "Mostra") { showingKey.toggle() }
                         }
-                        TextField("Modello personalizzato", text: $openaiModel)
+                        Button("Salva") {
+                            KeychainService.shared.apiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                            saved = true
+                        }
+                        .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        if saved { Text("Salvato").foregroundStyle(.secondary) }
+                    }
+
+                    Section("Mistral") {
+                        SecureField("API Key", text: $mistralKey)
                             .textInputAutocapitalization(.never)
+                            .textContentType(.password)
                             .autocorrectionDisabled()
                             .foregroundStyle(Color.black)
-                    } else if aiProvider == "mistral" {
-                        Picker("Modello", selection: $mistralModel) {
-                            ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
+                        Button("Salva") {
+                            KeychainService.shared.mistralApiKey = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
-                        HStack {
-                            Button("Aggiorna modelli Mistral") {
-                                Task {
-                                    do {
-                                        let typed = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
-                                        let keyToUse: String
-                                        if !typed.isEmpty {
-                                            keyToUse = typed
-                                        } else if let saved = KeychainService.shared.mistralApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                            keyToUse = saved
-                                        } else {
-                                            keyToUse = "" // trigger proxy fallback in ModelCatalog
-                                        }
-                                        try await catalog.refreshMistral(apiKey: keyToUse)
-                                        diagMessage = "Modelli Mistral aggiornati: \(catalog.mistralModels.count)"
-                                        showingDiagAlert = true
-                                    } catch {
-                                        let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
-                                        diagMessage = "Errore: \(last)"
-                                        showingDiagAlert = true
-                                    }
-                                }
-                            }
-                            Spacer()
-                        }
-                        TextField("Modello personalizzato", text: $mistralModel)
+                        .disabled(mistralKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+
+                    Section("Groq") {
+                        SecureField("API Key", text: $groqKey)
                             .textInputAutocapitalization(.never)
+                            .textContentType(.password)
                             .autocorrectionDisabled()
                             .foregroundStyle(Color.black)
-                    } else if aiProvider == "groq" {
-                        Picker("Modello", selection: $groqModel) {
-                            ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
+                        Button("Salva") {
+                            KeychainService.shared.groqApiKey = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
+                        .disabled(groqKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         HStack {
                             Button("Aggiorna modelli Groq") {
                                 Task {
-                                    if let key = KeychainService.shared.groqApiKey { try? await catalog.refreshGroq(apiKey: key) }
+                                    do {
+                                        let typed = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        let keyToUse: String
+                                        if !typed.isEmpty {
+                                            keyToUse = typed
+                                        } else if let saved = KeychainService.shared.groqApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            keyToUse = saved
+                                        } else {
+                                            keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                        }
+                                        try await catalog.refreshGroq(apiKey: keyToUse)
+                                        diagMessage = "Modelli Groq aggiornati: \(catalog.groqModels.count)"
+                                        showingDiagAlert = true
+                                    } catch {
+                                        let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                        diagMessage = "Errore: \(last)"
+                                        showingDiagAlert = true
+                                    }
                                 }
                             }
                             Spacer()
                         }
-                        TextField("Modello personalizzato", text: $groqModel)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .foregroundStyle(Color.black)
                     }
-                }
-                
-                // Chat: single chat mode enforced by design now
 
-                Section("Aspetto") {
-                    Picker("Tema", selection: $preferredAppearance) {
-                        Text("Sistema").tag("system")
-                        Text("Chiaro").tag("light")
-                        Text("Scuro").tag("dark")
+                    Section("Provider e Modello") {
+                        Picker("Provider", selection: $aiProvider) {
+                            Text("OpenAI").tag("openai")
+                            Text("Mistral").tag("mistral")
+                            Text("Groq").tag("groq")
+                        }
+                        .pickerStyle(.segmented)
+                        if aiProvider == "openai" {
+                            Picker("Modello", selection: $openaiModel) {
+                                ForEach(catalog.openaiModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            HStack {
+                                Button("Aggiorna modelli OpenAI") {
+                                    Task {
+                                        do {
+                                            let typed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                            let keyToUse: String
+                                            if !typed.isEmpty {
+                                                keyToUse = typed
+                                            } else if let saved = KeychainService.shared.apiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                                keyToUse = saved
+                                            } else {
+                                                keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                            }
+                                            try await catalog.refreshOpenAI(apiKey: keyToUse)
+                                            diagMessage = "Modelli OpenAI aggiornati: \(catalog.openaiModels.count)"
+                                            showingDiagAlert = true
+                                        } catch {
+                                            let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                            diagMessage = "Errore: \(last)"
+                                            showingDiagAlert = true
+                                        }
+                                    }
+                                }
+                                Spacer()
+                            }
+                            TextField("Modello personalizzato", text: $openaiModel)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(Color.black)
+                        } else if aiProvider == "mistral" {
+                            Picker("Modello", selection: $mistralModel) {
+                                ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            HStack {
+                                Button("Aggiorna modelli Mistral") {
+                                    Task {
+                                        do {
+                                            let typed = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
+                                            let keyToUse: String
+                                            if !typed.isEmpty {
+                                                keyToUse = typed
+                                            } else if let saved = KeychainService.shared.mistralApiKey, !saved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                                keyToUse = saved
+                                            } else {
+                                                keyToUse = "" // trigger proxy fallback in ModelCatalog
+                                            }
+                                            try await catalog.refreshMistral(apiKey: keyToUse)
+                                            diagMessage = "Modelli Mistral aggiornati: \(catalog.mistralModels.count)"
+                                            showingDiagAlert = true
+                                        } catch {
+                                            let last = Diagnostics.shared.lastAIError ?? error.localizedDescription
+                                            diagMessage = "Errore: \(last)"
+                                            showingDiagAlert = true
+                                        }
+                                    }
+                                }
+                                Spacer()
+                            }
+                            TextField("Modello personalizzato", text: $mistralModel)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(Color.black)
+                        } else if aiProvider == "groq" {
+                            Picker("Modello", selection: $groqModel) {
+                                ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            HStack {
+                                Button("Aggiorna modelli Groq") {
+                                    Task {
+                                        if let key = KeychainService.shared.groqApiKey { try? await catalog.refreshGroq(apiKey: key) }
+                                    }
+                                }
+                                Spacer()
+                            }
+                            TextField("Modello personalizzato", text: $groqModel)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(Color.black)
+                        }
                     }
-                    .pickerStyle(.segmented)
-                }
 
-                Section("Multimodale") {
-                    Toggle("Invia immagini come multimodale", isOn: $enableMultimodal)
-                }
+                    // Chat: single chat mode enforced by design now
 
-                Section("Prompt") {
-                    Button("Prompt") {
-                        promptTapCount += 1
-                        if promptTapCount >= 4 { showPromptEditor.toggle(); promptTapCount = 0 }
+                    Section("Aspetto") {
+                        Picker("Tema", selection: $preferredAppearance) {
+                            Text("Sistema").tag("system")
+                            Text("Chiaro").tag("light")
+                            Text("Scuro").tag("dark")
+                        }
+                        .pickerStyle(.segmented)
                     }
-                    .foregroundStyle(.primary)
-                    if showPromptEditor {
-                        Text("Prompt di sistema")
-                        TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
-                        Text("Prompt riassunto")
-                        TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
-                        HStack {
-                            Button("Reset") {
-                                systemPrompt = """
+
+                    Section("Multimodale") {
+                        Toggle("Invia immagini come multimodale", isOn: $enableMultimodal)
+                    }
+
+                    Section("Prompt") {
+                        Button("Prompt") {
+                            promptTapCount += 1
+                            if promptTapCount >= 4 { showPromptEditor.toggle(); promptTapCount = 0 }
+                        }
+                        .foregroundStyle(.primary)
+                        if showPromptEditor {
+                            Text("Prompt di sistema")
+                            TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
+                            Text("Prompt riassunto")
+                            TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
+                            HStack {
+                                Button("Reset") {
+                                    systemPrompt = """
 Sei un chatbot progettato per supportare le persone attraverso un dialogo empatico, personalizzato e rispettoso, ispirato al modo in cui un terapeuta umano esperto si relaziona con i propri pazienti. Il tuo scopo è offrire uno spazio di sfogo sicuro, guidato e contenuto, che possa sostenere l’utente nella comprensione e gestione delle proprie emozioni, difficoltà quotidiane, dubbi esistenziali e blocchi interiori, nel rispetto del ruolo non terapeutico.
 
 🎯 Obiettivo principale
@@ -347,31 +400,38 @@ Ti va di dirmi quando è iniziato questo senso di distanza dagli altri?”
 
 Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano immediato, come sopra.
 """
-                                summaryPrompt = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
+                                    summaryPrompt = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
+                                }
+                                Spacer()
                             }
-                            Spacer()
                         }
                     }
-                }
 
-                Section("Sicurezza") {
-                    CrisisSettingsView()
-                }
-                
-                Section("Informazioni") {
-                    Text("Serenity - chat con coach AI")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Section("Diagnostica") {
-                    Button("Verifica modello") {
-                        Task { await testModel() }
+                    Section("Sicurezza") {
+                        CrisisSettingsView()
                     }
-                    if let last = Diagnostics.shared.lastAIError, !last.isEmpty {
-                        Text("Ultimo errore provider:")
-                            .font(.footnote).foregroundStyle(.secondary)
-                        Text(last).font(.footnote).textSelection(.enabled)
+                    
+                    Section("Informazioni") {
+                        Text("Serenity - chat con coach AI")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Section("Diagnostica") {
+                        Button("Verifica modello") {
+                            Task { await testModel() }
+                        }
+                        if let last = Diagnostics.shared.lastAIError, !last.isEmpty {
+                            Text("Ultimo errore provider:")
+                                .font(.footnote).foregroundStyle(.secondary)
+                            Text(last).font(.footnote).textSelection(.enabled)
+                        }
+                    }
+                    
+                    Section("Sviluppatore") {
+                        Button("Disattiva modalità sviluppatore", role: .destructive) {
+                            developerMode = false
+                        }
                     }
                 }
             }
@@ -381,6 +441,11 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(diagMessage)
+            }
+            .alert("Modalità sviluppatore", isPresented: $showDevUnlockedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Modalità sviluppatore attivata. Ora vedi tutte le impostazioni.")
             }
         }
     }
@@ -410,4 +475,3 @@ extension SettingsView {
         showingDiagAlert = true
     }
 }
-

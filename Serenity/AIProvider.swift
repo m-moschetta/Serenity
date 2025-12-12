@@ -10,6 +10,18 @@ import Foundation
 struct ProviderMessage {
     let role: String // "system" | "user" | "assistant"
     let content: String
+    let images: [ProviderImage]
+
+    init(role: String, content: String, images: [ProviderImage] = []) {
+        self.role = role
+        self.content = content
+        self.images = images
+    }
+}
+
+struct ProviderImage {
+    let mimeType: String // e.g. "image/jpeg"
+    let data: Data
 }
 
 protocol AIProviderType {
@@ -54,7 +66,7 @@ final class AIService {
     }
 
     // Metodo per chat con rilevamento di crisi LLM-based
-    func chatWithCrisisDetection(messages: [ProviderMessage], model: String = "gpt-4o-mini", temperature: Double = 0.4, maxTokens: Int = 800) async throws -> String {
+    func chatWithCrisisDetection(messages: [ProviderMessage], model: String = "gpt-5.2", temperature: Double = 0.4, maxTokens: Int = 800) async throws -> String {
         // Controlla se l'ultimo messaggio dell'utente contiene segnali di crisi usando LLM
         if let lastUserMessage = messages.last(where: { $0.role == "user" }) {
             let isCrisis = await CrisisDetection.detectCrisis(in: lastUserMessage.content, using: self)

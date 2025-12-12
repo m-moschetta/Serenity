@@ -35,6 +35,7 @@ struct MainChatView: View {
 
 struct SingleChatView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.colorScheme) private var colorScheme
     @State private var input: String = ""
     @State private var sending = false
     @State private var streaming = false
@@ -47,7 +48,7 @@ struct SingleChatView: View {
     @State private var fullScreenImage: UIImage?
     @State private var textEditorHeight: CGFloat = 32
     @AppStorage("aiProvider") private var aiProvider: String = "openai"
-    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5"
+    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5.2"
     @AppStorage("mistralModel") private var mistralModel: String = "mistral-large-latest"
     @AppStorage("groqModel") private var groqModel: String = "llama3-8b-8192"
     @AppStorage("systemPrompt") private var storedSystemPrompt: String = """
@@ -67,6 +68,12 @@ Se ricevi segnali anche minimi di ideazione suicidaria, autolesionismo o rischio
 🧠 Modalità di risposta
 Personalizza profondamente il linguaggio; evita formule generiche e toni robotici. Stile simile a un terapeuta umano: diretto ma delicato, empatico ma non compiacente, caldo e centrato.
 
+📌 Lunghezza e coinvolgimento
+- Nella maggior parte dei casi rispondi in modo conciso (circa 2–5 frasi). Evita spiegazioni lunghe e liste estese.
+- Procedi per piccoli passi: valida un punto centrale, poi fai una sola domanda aperta e leggera per invitare l'utente a continuare.
+- Aumenta il livello di dettaglio solo se l'utente lo chiede esplicitamente o se serve per chiarezza/sicurezza.
+- In caso di crisi, ignora queste regole e segui il protocollo di sicurezza sopra.
+
 📚 Tecniche: ascolto riflessivo, domande aperte, normalizzazione senza banalizzare, validazione emotiva, micro-suggerimenti, silenzio utile.
 
 📝 Memoria: usa i riferimenti alle conversazioni precedenti per continuità e per evitare ripetizioni.
@@ -77,6 +84,8 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
 """
     @AppStorage("summaryPrompt") private var storedSummaryPrompt: String = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
     @AppStorage("enableMultimodal") private var enableMultimodal: Bool = true
+    @AppStorage("chatTemperature") private var chatTemperature: Double = 0.4
+    @AppStorage("onboardingSummary") private var onboardingSummary: String = ""
     
     let conversation: Conversation
     @State private var showShare = false
@@ -113,11 +122,29 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                     .background(Color.clear)
                     .scrollDismissesKeyboard(.interactively)
                     .onChange(of: conversation.messages.count) { _ in
+                    // #region agent log
+                    agentLog(
+                        runId: "pre-fix",
+                        hypothesisId: "H1",
+                        location: "ChatView.swift:onChange(conversation.messages.count)",
+                        message: "Messages count changed",
+                        data: ["count": conversation.messages.count]
+                    )
+                    // #endregion
                         if let last = conversation.messages.sorted(by: { $0.createdAt < $1.createdAt }).last {
                             withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                         }
                     }
                     .onChange(of: photoItems) { _ in
+                    // #region agent log
+                    agentLog(
+                        runId: "pre-fix",
+                        hypothesisId: "H2",
+                        location: "ChatView.swift:onChange(photoItems)",
+                        message: "Photo picker items changed",
+                        data: ["count": photoItems.count]
+                    )
+                    // #endregion
                         Task { await handlePhotoPickerItems() }
                     }
                 }
@@ -248,49 +275,25 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                 }
                 .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 2)
                 ZStack(alignment: .topLeading) {
-                    // Use a fixed dark text color to ensure readability on the always-white input background (especially in dark mode)
-                    if #available(iOS 26.0, *) {
-                        GrowingTextView(
-                            text: $input,
-                            minHeight: 32,
-                            maxHeight: 100,
-                            font: .systemFont(ofSize: 16),
-                            textColor: UIColor.white,
-                            textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-                        ) { newHeight in
-                            textEditorHeight = newHeight
-                        }
-                        .frame(height: textEditorHeight)
-                    } else {
-                        GrowingTextView(
-                            text: $input,
-                            minHeight: 32,
-                            maxHeight: 100,
-                            font: .systemFont(ofSize: 16),
-                            textColor: UIColor.black,
-                            textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-                        ) { newHeight in
-                            textEditorHeight = newHeight
-                        }
-                        .frame(height: textEditorHeight)
+                    GrowingTextView(
+                        text: $input,
+                        minHeight: 32,
+                        maxHeight: 100,
+                        font: .systemFont(ofSize: 16),
+                        textColor: UIColor(colorScheme == .dark ? .white : .black),
+                        textInset: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+                    ) { newHeight in
+                        textEditorHeight = newHeight
                     }
+                    .frame(height: textEditorHeight)
 
                     if input.isEmpty {
-                        if #available(iOS 26.0, *) {
-                            Text("Scrivi un messaggio…")
-                                .foregroundStyle(Color.white.opacity(0.7))
-                                .font(.system(size: 16))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .allowsHitTesting(false)
-                        } else {
-                            Text("Scrivi un messaggio…")
-                                .foregroundStyle(Color.gray)
-                                .font(.system(size: 16))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .allowsHitTesting(false)
-                        }
+                        Text("Scrivi un messaggio…")
+                            .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.7) : Color.gray)
+                            .font(.system(size: 16))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .allowsHitTesting(false)
                     }
                 }
                 .background(
@@ -382,6 +385,18 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
     private func send() {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.isEmpty && pendingImages.isEmpty { return }
+        // #region agent log
+        agentLog(
+            runId: "pre-fix",
+            hypothesisId: "H3",
+            location: "ChatView.swift:send()",
+            message: "Send invoked",
+            data: [
+                "textLength": text.count,
+                "pendingImages": pendingImages.count
+            ]
+        )
+        // #endregion
         input = ""
         sending = true
         streaming = true
@@ -417,7 +432,7 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
 
             do {
                 // Use the new AIService with integrated crisis detection and therapeutic prompt
-                let reply = try await AIService.shared.chatWithCrisisDetection(messages: payload, model: model, temperature: 0.4, maxTokens: 800)
+                let reply = try await AIService.shared.chatWithCrisisDetection(messages: payload, model: model, temperature: chatTemperature, maxTokens: 800)
 
                 // Check if the response is a crisis response (contains emergency numbers)
                 if reply.contains("📞 Dove chiedere aiuto") || reply.contains("Telefono Amico") {
@@ -435,12 +450,30 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                 }
 
                 assistant.content = reply
+                // #region agent log
+                agentLog(
+                    runId: "pre-fix",
+                    hypothesisId: "H4",
+                    location: "ChatView.swift:send()",
+                    message: "Assistant reply received",
+                    data: ["replyLength": reply.count]
+                )
+                // #endregion
             } catch {
                 // Fallback: retry without images
                 do {
                     let textOnly = buildPayloadMessagesForLLM(includeImages: false)
-                    let text = try await AIService.shared.chatWithCrisisDetection(messages: textOnly, model: model, temperature: 0.4, maxTokens: 800)
+                    let text = try await AIService.shared.chatWithCrisisDetection(messages: textOnly, model: model, temperature: chatTemperature, maxTokens: 800)
                     assistant.content = text
+                    // #region agent log
+                    agentLog(
+                        runId: "pre-fix",
+                        hypothesisId: "H4",
+                        location: "ChatView.swift:send()",
+                        message: "Assistant reply received after text-only retry",
+                        data: ["replyLength": text.count]
+                    )
+                    // #endregion
                 } catch {
                     // Fallback 2: prova altri modelli
                     let candidates = fallbackModels(current: model, provider: aiProvider)
@@ -449,9 +482,18 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                         let allowVision = enableMultimodal && modelSupportsVision(model: candidate, provider: aiProvider)
                         let msg = buildPayloadMessagesForLLM(includeImages: allowVision)
                         do {
-                            let text = try await AIService.shared.chatWithCrisisDetection(messages: msg, model: candidate, temperature: 0.4, maxTokens: 800)
+                            let text = try await AIService.shared.chatWithCrisisDetection(messages: msg, model: candidate, temperature: chatTemperature, maxTokens: 800)
                             assistant.content = text
                             success = true
+                            // #region agent log
+                            agentLog(
+                                runId: "pre-fix",
+                                hypothesisId: "H4",
+                                location: "ChatView.swift:send()",
+                                message: "Assistant reply received after fallback model",
+                                data: ["replyLength": text.count, "model": candidate]
+                            )
+                            // #endregion
                             break
                         } catch { continue }
                     }
@@ -520,6 +562,9 @@ extension SingleChatView {
     
     private func buildPayloadMessagesForLLM(includeImages: Bool) -> [ProviderMessage] {
         var result: [ProviderMessage] = []
+        if !onboardingSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            result.append(ProviderMessage(role: "system", content: "Profilo dell'utente dal questionario di onboarding:\n\(onboardingSummary)"))
+        }
         // memories
         let memories = conversation.memories.sorted(by: { $0.createdAt > $1.createdAt }).prefix(3)
         if !memories.isEmpty {
@@ -529,12 +574,32 @@ extension SingleChatView {
         // dialogue (excluding system messages as they're handled by AIService)
         for m in conversation.messages.sorted(by: { $0.createdAt < $1.createdAt }) where m.role != .system {
             var text = m.content
+            var images: [ProviderImage] = []
+            
+            if !m.attachments.isEmpty, includeImages {
+                for att in m.attachments {
+                    if let ui = ImageStore.load(att.localPath),
+                       let data = ImageStore.jpegDataForUpload(ui) {
+                        images.append(ProviderImage(mimeType: "image/jpeg", data: data))
+                    }
+                }
+            }
+            
             if !m.attachments.isEmpty {
                 let count = m.attachments.count
-                let note = "[\(count) immagine\(count > 1 ? "i" : "")] allegata\(count > 1 ? "e" : "")."
-                text = text.isEmpty ? note : text + "\n\n" + note
+                if !includeImages || images.isEmpty {
+                    // modalità testo-only: annotiamo che esistono allegati
+                    let note = "[\(count) immagine\(count > 1 ? "i" : "")] allegata\(count > 1 ? "e" : "")."
+                    text = text.isEmpty ? note : text + "\n\n" + note
+                } else if images.count < count {
+                    // alcune immagini non sono state caricate/convertite
+                    let missing = count - images.count
+                    let note = "[\(missing) immagine\(missing > 1 ? "i" : "")] non caricata\(missing > 1 ? "e" : "")]."
+                    text = text.isEmpty ? note : text + "\n\n" + note
+                }
             }
-            result.append(ProviderMessage(role: m.role.rawValue, content: text))
+            
+            result.append(ProviderMessage(role: m.role.rawValue, content: text, images: images))
         }
         return result
     }
@@ -609,6 +674,39 @@ extension SingleChatView {
         }
         return false
     }
+
+    // #region agent log helper
+    private func agentLog(runId: String, hypothesisId: String, location: String, message: String, data: [String: Any]) {
+        let payload: [String: Any] = [
+            "sessionId": "debug-session",
+            "runId": runId,
+            "hypothesisId": hypothesisId,
+            "location": location,
+            "message": message,
+            "data": data,
+            "timestamp": Int(Date().timeIntervalSince1970 * 1000)
+        ]
+        if let json = try? JSONSerialization.data(withJSONObject: payload),
+           let docDir = Optional("/Users/mariomoschetta/Downloads/Serenity/Tranquiz.xcodeproj/.cursor/debug.log") {
+            let url = URL(fileURLWithPath: docDir)
+            if FileManager.default.fileExists(atPath: docDir) {
+                if let handle = try? FileHandle(forWritingTo: url) {
+                    handle.seekToEndOfFile()
+                    handle.write(json)
+                    handle.write(Data("\n".utf8))
+                    try? handle.close()
+                }
+            } else {
+                try? json.write(to: url)
+                if let handle = try? FileHandle(forWritingTo: url) {
+                    handle.seekToEndOfFile()
+                    handle.write(Data("\n".utf8))
+                    try? handle.close()
+                }
+            }
+        }
+    }
+    // #endregion
 }
 
 // Rilevamento di crisi ora gestito centralmente da CrisisDetection
@@ -616,6 +714,8 @@ extension SingleChatView {
 struct ChatBubble: View {
     let message: ChatMessage
     var onImageTap: (UIImage) -> Void = { _ in }
+
+    @Environment(\.colorScheme) private var colorScheme
     
     var isUser: Bool { message.role == .user }
     
@@ -685,11 +785,7 @@ struct ChatBubble: View {
     }
     
     private var textColor: Color {
-        if #available(iOS 26.0, *) {
-            return Color.white
-        } else {
-            return Color.black.opacity(0.87)
-        }
+        colorScheme == .dark ? Color.white : Color.black.opacity(0.9)
     }
 
     private func hasImage(_ msg: ChatMessage) -> Bool { !msg.attachments.isEmpty }
@@ -720,7 +816,7 @@ struct ChatBubble: View {
     }
 }
 
-fileprivate enum ChatStyle {
+enum ChatStyle {
     // Purple gradient background with good contrast
     static let background: LinearGradient = LinearGradient(
         colors: [
@@ -809,7 +905,7 @@ struct MemoriesView: View {
     @Environment(\.modelContext) private var context
     let conversation: Conversation
     @AppStorage("aiProvider") private var aiProvider: String = "openai"
-    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5-mini"
+    @AppStorage("openaiModel") private var openaiModel: String = "gpt-5.2"
     @AppStorage("mistralModel") private var mistralModel: String = "mistral-large-latest"
     @AppStorage("groqModel") private var groqModel: String = "llama3-8b-8192"
     @AppStorage("summaryPrompt") private var storedSummaryPrompt: String = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
@@ -863,4 +959,3 @@ struct MemoriesView: View {
         }
     }
 }
-

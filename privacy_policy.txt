@@ -1,0 +1,59 @@
+PRIVACY POLICY - TRANQUIZ
+
+Ultimo aggiornamento: Dicembre 2025
+Sviluppatore: Mario Moschetta
+App: Tranquiz - Il Tuo Coach Personale
+
+1. INTRODUZIONE
+La tua privacy è importante per noi. Questa Informativa sulla Privacy spiega come Tranquiz raccoglie, utilizza, divulga e protegge le tue informazioni quando utilizzi la nostra applicazione mobile.
+
+2. INFORMAZIONI CHE RACCOGLIAMO
+
+2.1 Dati Fornite Volontariamente
+- Conversazioni: I messaggi che invii nell'app per le funzionalità di coaching
+- Immagini: Foto che scegli di condividere (opzionale)
+- Preferenze: Impostazioni dell'app che configuri
+
+2.2 Dati Raccogli automaticamente
+- Dati tecnici: Versione del sistema operativo, modello del dispositivo
+- Dati di utilizzo: Come utilizzi l'app (anonimizzato)
+- Crash reports: Informazioni su eventuali crash dell'app
+
+3. COME UTILIZZIAMO LE TUE INFORMAZIONI
+- Fornire il servizio: Elaborare le tue conversazioni per offrire coaching personalizzato
+- Migliorare l'app: Analizzare l'utilizzo per migliorare le funzionalità
+- Sicurezza: Monitorare e prevenire usi impropri
+- Supporto: Rispondere alle tue richieste di assistenza
+
+4. CONDIVISIONE DELLE INFORMAZIONI
+IMPORTANTE: Non vendiamo, affittiamo o condividiamo le tue informazioni personali con terze parti per scopi commerciali.
+
+Le tue informazioni vengono condivise solo nei seguenti casi:
+- Servizi AI: Le tue conversazioni vengono inviate temporaneamente a servizi di intelligenza artificiale (OpenAI, Groq, Mistral) per generare risposte
+- Obblighi legali: Se richiesto dalla legge o per proteggere i diritti
+- Sicurezza: Per prevenire danni o attività illegali
+
+5. SICUREZZA DEI DATI
+- Crittografia: Tutte le comunicazioni sono crittografate
+- Archiviazione locale: Le conversazioni sono salvate solo sul tuo dispositivo
+- Accesso limitato: Solo il necessario personale ha accesso ai dati tecnici
+
+6. I TUOI DIRITTI (GDPR)
+- Accedere: Richiedere una copia dei tuoi dati
+- Rettificare: Correggere informazioni inaccurate
+- Cancellare: Richiedere la cancellazione dei tuoi dati
+- Portabilità: Ricevere i tuoi dati in formato trasferibile
+- Opposizione: Opporsi al trattamento dei dati
+
+7. CONSERVAZIONE DEI DATI
+- Conversazioni: Salvate localmente sul tuo dispositivo fino a quando non le elimini
+- Dati tecnici: Conservati per 24 mesi per analisi e miglioramenti
+- Crash reports: Conservati per 12 mesi per debugging
+
+8. CONTATTI
+Per qualsiasi domanda sulla privacy: privacy@tranquiz.app
+Sviluppatore: Mario Moschetta
+
+9. DISCLAIMER
+Tranquiz è uno strumento di supporto personale e non sostituisce mai il parere di professionisti qualificati della salute mentale. Se stai attraversando una crisi, contatta immediatamente i servizi di emergenza locali.
+

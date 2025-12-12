@@ -13,7 +13,7 @@ final class ModelCatalog: ObservableObject {
     private init() {}
     
     @Published var openaiModels: [String] = [
-        "gpt-5-mini", "gpt-5",
+        "gpt-5.2", "gpt-5-mini", "gpt-5",
         "gpt-4.1-mini", "gpt-4o-mini", "o4-mini",
         "gpt-4o", "gpt-4.1"
     ]

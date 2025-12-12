@@ -1,0 +1,94 @@
+**GUIDA PASSO-PASSO PER CARICARE TRANQUIZ SU APP STORE**
+
+**FASE 1: Preparazione Build**
+✅ Assicurati che l'app sia testata su iPhone 16 simulator
+✅ Verifica che tutti i permessi siano configurati correttamente
+✅ Controlla che le API key per AI siano funzionanti
+✅ Build per distribuzione (Archive > Distribute App)
+
+**FASE 2: App Store Connect Setup**
+1. **Crea nuova app in App Store Connect:**
+   - Vai su appstoreconnect.apple.com
+   - "Apps" > "+" > "New App"
+   - Platforms: iOS
+   - Name: Tranquiz
+   - Primary Language: Italian
+   - Bundle ID: Seleziona quello esistente
+   - SKU: TRANQUIZ001
+
+2. **Compila App Information:**
+   - **Nome:** Tranquiz - Il Tuo Coach Personale
+   - **Sottotitolo:** Coaching emotivo intelligente
+   - **Privacy Policy URL:** [CREA UNA!]
+   - **Licenza:** Standard
+
+3. **Pricing and Availability:**
+   - Price: Free
+   - Availability: All countries
+
+**FASE 3: Version Information (1.0.0)**
+1. **Store Version Information:**
+   - Description: [Usa quella che ho preparato]
+   - Keywords: coaching, crescita personale, benessere emotivo, mindfulness
+   - Support URL: [Crea pagina supporto]
+   - Marketing URL: (opzionale)
+
+2. **App Screenshots:**
+   - Carica screenshots per ogni device richiesto
+   - iPhone 6.9" (iPhone 16 Pro Max) - OBBLIGATORIO
+   - iPhone 6.3" (iPhone 16 Pro) - OBBLIGATORIO
+   - iPhone 6.1" (iPhone 16) - OBBLIGATORIO
+
+3. **General App Information:**
+   - Category: Lifestyle
+   - Subcategory: Self Improvement
+   - Age Rating: 4+
+   - Copyright: © 2025 Mario Moschetta
+
+**FASE 4: Build Upload**
+1. **Carica il build:**
+   - Da Xcode: Product > Archive
+   - Poi "Distribute App" > App Store Connect
+   - Seleziona il profilo di distribuzione corretto
+
+2. **Collega build alla versione:**
+   - In App Store Connect, vai alla versione 1.0.0
+   - Seleziona "Build" e scegli il tuo upload
+
+**FASE 5: Review Information**
+1. **App Review Information:**
+   - Contact Information: I tuoi dati
+   - Demo Account: Non necessario
+   - Notes: "App requires internet connection for AI features"
+   - Attachments: (opzionale, screenshot di funzionamento)
+
+**FASE 6: TestFlight (Raccomandato)**
+Prima di submit finale:
+1. Crea TestFlight build
+2. Invita beta tester
+3. Testa su dispositivi reali
+4. Raccogli feedback
+
+**FASE 7: Final Submission**
+1. **Submit for Review:**
+   - Controlla che tutto sia compilato
+   - Clicca "Submit to App Review"
+   - Tempo attesa: 24-48 ore per prima review
+
+**IMPORTANTE - Privacy Policy**
+Devi creare una privacy policy che includa:
+- Raccolta dati conversazioni (solo locale)
+- Uso API AI esterne
+- Non condivisione dati
+- Diritti utente GDPR
+- Contatto per richieste privacy
+
+**STRUMENTI UTILI:**
+- Sito per privacy policy: iubenda.com o termsfeed.com
+- Generatore app screenshots: app-mockup.com
+- Test dispositivi: TestFlight
+
+**COSTI:**
+- Developer Program: €99/anno
+- Eventuali tool per screenshots: €20-50 una tantum
+
