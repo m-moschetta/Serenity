@@ -1,0 +1,11 @@
+{"runId":"pre-fix","timestamp":1765536788663,"sessionId":"debug-session","message":"Messages count changed","data":{"count":1},"hypothesisId":"H1","location":"ChatView.swift:onChange(conversation.messages.count)"}
+{"message":"Send invoked","data":{"pendingImages":0,"textLength":23},"runId":"pre-fix","timestamp":1765537080328,"location":"ChatView.swift:send()","sessionId":"debug-session","hypothesisId":"H3"}
+{"hypothesisId":"H1","location":"ChatView.swift:onChange(conversation.messages.count)","sessionId":"debug-session","data":{"count":2},"message":"Messages count changed","runId":"pre-fix","timestamp":1765537080360}
+{"timestamp":1765537080428,"message":"Messages count changed","data":{"count":3},"runId":"pre-fix","hypothesisId":"H1","location":"ChatView.swift:onChange(conversation.messages.count)","sessionId":"debug-session"}
+{"location":"ChatView.swift:send()","message":"Assistant reply received after fallback model","sessionId":"debug-session","data":{"model":"gpt-4.1-mini","replyLength":256},"timestamp":1765537089840,"runId":"pre-fix","hypothesisId":"H4"}
+{"data":{"count":1},"hypothesisId":"H2","sessionId":"debug-session","runId":"pre-fix","location":"ChatView.swift:onChange(photoItems)","timestamp":1765538203366,"message":"Photo picker items changed"}
+{"location":"ChatView.swift:onChange(photoItems)","data":{"count":0},"timestamp":1765538203421,"hypothesisId":"H2","message":"Photo picker items changed","sessionId":"debug-session","runId":"pre-fix"}
+{"runId":"pre-fix","data":{"textLength":0,"pendingImages":1},"location":"ChatView.swift:send()","hypothesisId":"H3","sessionId":"debug-session","message":"Send invoked","timestamp":1765538205830}
+{"hypothesisId":"H1","runId":"pre-fix","message":"Messages count changed","location":"ChatView.swift:onChange(conversation.messages.count)","data":{"count":4},"timestamp":1765538206061,"sessionId":"debug-session"}
+{"message":"Messages count changed","data":{"count":5},"timestamp":1765538206455,"runId":"pre-fix","location":"ChatView.swift:onChange(conversation.messages.count)","sessionId":"debug-session","hypothesisId":"H1"}
+{"sessionId":"debug-session","hypothesisId":"H4","message":"Assistant reply received after fallback model","runId":"pre-fix","data":{"replyLength":305,"model":"gpt-4.1-mini"},"timestamp":1765538214740,"location":"ChatView.swift:send()"}
