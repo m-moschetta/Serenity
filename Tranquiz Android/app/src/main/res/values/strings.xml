@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tranquiz</string>
+    
+    <!-- AI Assistant -->
+    <string name="ai_name">Tranquiz</string>
+    <string name="ai_status_online">Online</string>
+    <string name="ai_status_typing">Sta scrivendo…</string>
+    <string name="ai_avatar">Avatar dell\'assistente AI</string>
+    
+    <!-- Chat Interface -->
+    <string name="message_hint">Scrivi un messaggio…</string>
+    <string name="send_message">Invia messaggio</string>
+    <string name="menu">Menu</string>
+    
+    <!-- Welcome Messages -->
+    <string name="welcome_message">Ciao! Sono Tranquiz, il tuo assistente personale per il benessere mentale. Come posso aiutarti oggi?</string>
+    <string name="welcome_subtitle">Sono qui per ascoltarti e supportarti nel tuo percorso di crescita personale.</string>
+    
+    <!-- Error Messages -->
+    <string name="error_network">Errore di connessione. Controlla la tua connessione internet.</string>
+    <string name="error_api">Errore del servizio. Riprova più tardi.</string>
+    <string name="error_empty_message">Il messaggio non può essere vuoto.</string>
+    <string name="error_api_key">Chiave API non configurata. Controlla le impostazioni.</string>
+    <string name="error_ai_empty_response">Risposta vuota dall\'AI.</string>
+    <string name="error_api_status_401">Autenticazione non valida (401). Controlla token/API key.</string>
+    <string name="error_api_status_403">Accesso negato (403). Controlla permessi o token.</string>
+    <string name="error_api_status_404">Endpoint non trovato (404). Controlla Base URL.</string>
+    <string name="error_api_status_429">Limite richieste superato (429). Riprova più tardi.</string>
+    <string name="error_api_status_500">Errore server (500). Riprova più tardi.</string>
+    <string name="error_api_status_generic">Errore API (%1$d): %2$s</string>
+    <string name="error_icon">Icona errore</string>
+
+    <!-- ApiError user-friendly messages -->
+    <string name="error_unauthorized">Autenticazione non valida. Controlla la configurazione API.</string>
+    <string name="error_forbidden">Accesso negato. Controlla i permessi.</string>
+    <string name="error_not_found">Servizio non trovato. Controlla le impostazioni.</string>
+    <string name="error_rate_limited">Troppe richieste. Riprova tra qualche minuto.</string>
+    <string name="error_server">Errore del server. Riprova più tardi.</string>
+    <string name="error_empty_response">Risposta vuota dal server.</string>
+    <string name="error_generic">Si è verificato un errore. Riprova.</string>
+    <string name="safety_message">Per la tua sicurezza, contatta il 112 o un professionista.</string>
+
+    <string name="safety_block_message">Per motivi di sicurezza, questa conversazione è stata bloccata. Se ti senti in pericolo o temi di farti del male, contatta subito il 112 o un professionista della salute mentale.</string>
+    
+    <!-- Menu Options -->
+    <string name="menu_clear_chat">Cancella conversazione</string>
+    <string name="menu_settings">Impostazioni</string>
+    <string name="menu_about">Informazioni</string>
+    
+    <!-- Confirmation Dialogs -->
+    <string name="confirm_clear_chat">Sei sicuro di voler cancellare tutta la conversazione?</string>
+    <string name="confirm_clear_chat_message">Questa azione non può essere annullata.</string>
+    <string name="yes">Sì</string>
+    <string name="no">No</string>
+    <string name="cancel">Annulla</string>
+    
+    <!-- Settings -->
+    <string name="settings_api_key">Chiave API</string>
+    <string name="settings_api_key_hint">Inserisci la tua chiave API OpenAI</string>
+    <string name="settings_save">Salva</string>
+
+    <!-- Provider Configurations -->
+    <!-- Gateway (Worker) Configuration -->
+    <string name="gateway_base_url">https://llm-proxy-gateway.mariomos94.workers.dev/</string>
+    <string name="gateway_api_key">your-worker-token-here</string>
+
+    <!-- OpenAI -->
+    <string name="provider_openai_base_url">https://api.openai.com/</string>
+    <string name="provider_openai_api_key">sk-your-openai-api-key-here</string>
+    <string name="provider_openai_default_model">gpt-5</string>
+
+    <!-- Anthropic -->
+    <string name="provider_anthropic_base_url">https://api.anthropic.com/</string>
+    <string name="provider_anthropic_api_key">sk-ant-your-anthropic-api-key-here</string>
+    <string name="provider_anthropic_default_model">claude-3-5-sonnet-20241022</string>
+
+    <!-- Perplexity -->
+    <string name="provider_perplexity_base_url">https://api.perplexity.ai/</string>
+    <string name="provider_perplexity_api_key">pplx-your-perplexity-api-key-here</string>
+    <string name="provider_perplexity_default_model">llama-3.1-sonar-large-128k-online</string>
+
+    <!-- Groq -->
+    <string name="provider_groq_base_url">https://api.groq.com/</string>
+    <string name="provider_groq_api_key">gsk_your-groq-api-key-here</string>
+    <string name="provider_groq_default_model">llama3-8b-8192</string>
+
+    <!-- Current Provider Selection -->
+    <string name="current_provider">openai</string>
+
+    <!-- About -->
+    <string name="about_description">Tranquiz è un assistente AI progettato per fornire supporto emotivo e life coaching. Non sostituisce un professionista della salute mentale.</string>
+    <string name="about_version">Versione 1.0</string>
+
+    <!-- Settings strings -->
+    <string name="pref_current_provider_title">Provider corrente</string>
+    <string name="pref_current_provider_summary">Seleziona il provider AI da usare</string>
+    <string name="pref_models_category_title">Modelli per provider</string>
+    <string name="pref_model_openai_title">Modello OpenAI</string>
+    <string name="pref_model_anthropic_title">Modello Anthropic</string>
+    <string name="pref_model_perplexity_title">Modello Perplexity</string>
+    <string name="pref_model_groq_title">Modello Groq</string>
+    <string name="pref_model_dialog_title">Inserisci il nome del modello</string>
+
+    <!-- Settings arrays -->
+    <string-array name="provider_entries">
+        <item>OpenAI</item>
+        <item>Anthropic</item>
+        <item>Perplexity</item>
+        <item>Groq</item>
+    </string-array>
+    <string-array name="provider_values">
+        <item>openai</item>
+        <item>anthropic</item>
+        <item>perplexity</item>
+        <item>groq</item>
+    </string-array>
+
+    <!-- Gateway settings -->
+    <string name="pref_gateway_category_title">Gateway</string>
+    <string name="pref_gateway_base_url_title">Gateway Base URL</string>
+    <string name="pref_gateway_api_key_title">Gateway API Key</string>
+    <string name="pref_gateway_api_key_summary">Tocca per impostare la chiave del gateway</string>
+    <string name="pref_gateway_test_title">Test connessione gateway</string>
+    <string name="pref_gateway_test_summary">Verifica URL, token e provider; mostra esito</string>
+
+    <string name="ui_conversation_blocked">Conversazione bloccata per motivi di sicurezza</string>
+
+    <string name="pref_chat_category_title">Chat</string>
+    <string name="pref_system_prompt_title">Prompt di sistema</string>
+    <string name="pref_system_prompt_summary">Personalizza il comportamento di Tranquiz</string>
+
+    <string name="onboarding_name_title">Come ti chiami?</string>
+    <string name="onboarding_name_hint">Nome (opzionale)</string>
+    <string name="onboarding_feeling_title">Come ti senti oggi?</string>
+    <string name="onboarding_feeling_hint">Esempio: stressato, sereno, stanco…</string>
+    <string name="onboarding_goal_title">Cosa ti piacerebbe ottenere da Tranquiz?</string>
+    <string name="onboarding_goal_hint">Esempio: gestire ansia, motivazione, abitudini…</string>
+
+    <string name="next">Avanti</string>
+    <string name="finish">Fine</string>
+    <string name="skip">Salta</string>
+
+    <string name="back">Indietro</string>
+    <string name="onboarding_header">Benvenuto su Tranquiz</string>
+    <string name="onboarding_subtitle">Rispondi a poche domande per personalizzare la tua esperienza</string>
+
+    <!-- Onboarding step 4 - Tone -->
+    <string name="onboarding_tone_title">Come preferisci che ti parli?</string>
+    <string name="onboarding_tone_subtitle">Personalizza lo stile di comunicazione</string>
+
+    <!-- Tone labels -->
+    <string name="tone_empathy_label">Empatia</string>
+    <string name="tone_approach_label">Approccio</string>
+    <string name="tone_energy_label">Energia</string>
+    <string name="tone_mood_label">Tono</string>
+    <string name="tone_length_label">Lunghezza risposte</string>
+    <string name="tone_style_label">Stile</string>
+
+    <!-- Tone options -->
+    <string name="tone_empathetic">Empatico</string>
+    <string name="tone_neutral">Neutro</string>
+    <string name="tone_gentle">Gentile</string>
+    <string name="tone_direct">Diretto</string>
+    <string name="tone_calm">Calmo</string>
+    <string name="tone_energetic">Energico</string>
+    <string name="tone_serious">Serio</string>
+    <string name="tone_light">Leggero</string>
+    <string name="tone_brief">Brevi</string>
+    <string name="tone_detailed">Dettagliate</string>
+    <string name="tone_intimate">Intimo</string>
+    <string name="tone_professional">Professionale</string>
+
+    <!-- Tone Settings category -->
+    <string name="pref_tone_category_title">Tono dell\'assistente</string>
+    <string name="pref_tone_empathy_title">Empatia</string>
+    <string name="pref_tone_empathy_summary">Quanto vuoi che sia comprensivo</string>
+    <string name="pref_tone_approach_title">Approccio</string>
+    <string name="pref_tone_approach_summary">Gentile o diretto</string>
+    <string name="pref_tone_energy_title">Energia</string>
+    <string name="pref_tone_energy_summary">Calmo o motivante</string>
+    <string name="pref_tone_mood_title">Tono</string>
+    <string name="pref_tone_mood_summary">Serio o leggero</string>
+    <string name="pref_tone_length_title">Lunghezza risposte</string>
+    <string name="pref_tone_length_summary">Brevi o dettagliate</string>
+    <string name="pref_tone_style_title">Stile</string>
+    <string name="pref_tone_style_summary">Intimo o professionale</string>
+
+    <!-- Tone arrays for ListPreference -->
+    <string-array name="tone_empathy_entries">
+        <item>Empatico</item>
+        <item>Neutro/Pratico</item>
+    </string-array>
+    <string-array name="tone_empathy_values">
+        <item>empathetic</item>
+        <item>neutral</item>
+    </string-array>
+
+    <string-array name="tone_approach_entries">
+        <item>Gentile</item>
+        <item>Diretto</item>
+    </string-array>
+    <string-array name="tone_approach_values">
+        <item>gentle</item>
+        <item>direct</item>
+    </string-array>
+
+    <string-array name="tone_energy_entries">
+        <item>Calmo/Riflessivo</item>
+        <item>Energico/Motivante</item>
+    </string-array>
+    <string-array name="tone_energy_values">
+        <item>calm</item>
+        <item>energetic</item>
+    </string-array>
+
+    <string-array name="tone_mood_entries">
+        <item>Serio</item>
+        <item>Leggero/Ironico</item>
+    </string-array>
+    <string-array name="tone_mood_values">
+        <item>serious</item>
+        <item>light</item>
+    </string-array>
+
+    <string-array name="tone_length_entries">
+        <item>Risposte brevi</item>
+        <item>Risposte dettagliate</item>
+    </string-array>
+    <string-array name="tone_length_values">
+        <item>brief</item>
+        <item>detailed</item>
+    </string-array>
+
+    <string-array name="tone_style_entries">
+        <item>Intimo/Amichevole</item>
+        <item>Professionale</item>
+    </string-array>
+    <string-array name="tone_style_values">
+        <item>intimate</item>
+        <item>professional</item>
+    </string-array>
+</resources>

@@ -13,17 +13,22 @@ import UIKit
 struct MainChatView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Conversation.createdAt, order: .forward) private var conversations: [Conversation]
-    
+    @Binding var triggerWeeklyResponse: Bool
+
+    init(triggerWeeklyResponse: Binding<Bool> = .constant(false)) {
+        self._triggerWeeklyResponse = triggerWeeklyResponse
+    }
+
     var body: some View {
         Group {
             if let conv = conversations.first {
-                SingleChatView(conversation: conv)
+                SingleChatView(conversation: conv, triggerWeeklyResponse: $triggerWeeklyResponse)
             } else {
                 ProgressView().onAppear { ensureConversation() }
             }
         }
     }
-    
+
     private func ensureConversation() {
         if conversations.isEmpty {
             let c = Conversation()
@@ -40,7 +45,6 @@ struct SingleChatView: View {
     @State private var sending = false
     @State private var streaming = false
     @State private var streamStarted = false
-    @State private var showingSettings = false
     @State private var showPhotoPicker = false
     @State private var showCamera = false
     @State private var photoItems: [PhotosPickerItem] = []
@@ -88,8 +92,14 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
     @AppStorage("onboardingSummary") private var onboardingSummary: String = ""
     
     let conversation: Conversation
-    @State private var showShare = false
-    @State private var exportURL: URL?
+    @Binding var triggerWeeklyResponse: Bool
+    @Query(sort: \MoodEntry.date, order: .reverse) private var moodEntries: [MoodEntry]
+
+    init(conversation: Conversation, triggerWeeklyResponse: Binding<Bool> = .constant(false)) {
+        self.conversation = conversation
+        self._triggerWeeklyResponse = triggerWeeklyResponse
+    }
+
     @State private var showCrisisOverlay = false
     @State private var crisisOverrideNumber: String? = nil
     @State private var crisisOverrideExtraLabel: String? = nil
@@ -156,30 +166,12 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
             composerBackground
         }
         .navigationTitle(conversation.title)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.clear, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { exportConversation() } label: { Image(systemName: "square.and.arrow.up") }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(destination: MemoriesView(conversation: conversation)) {
-                    Image(systemName: "clock.arrow.circlepath")
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showingSettings = true } label: { Image(systemName: "gearshape") }
-            }
-        }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             // Il prompt di sistema è ora gestito automaticamente da AIService
             // Non è più necessario aggiungere manualmente un messaggio di sistema
         }
-        .sheet(isPresented: $showShare) {
-            if let url = exportURL { ShareSheet(items: [url]) }
-        }
-        .sheet(isPresented: $showingSettings) { SettingsView() }
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoItems, maxSelectionCount: 6, matching: .images)
         .sheet(isPresented: $showCamera) {
             CameraPicker { image in
@@ -199,7 +191,117 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                 overrideExtraNumber: crisisOverrideExtraNumber
             )
         }
-        
+        .onChange(of: triggerWeeklyResponse) { _, shouldTrigger in
+            if shouldTrigger {
+                triggerWeeklyResponse = false
+                Task { await generateWeeklyResponse() }
+            }
+        }
+    }
+
+    // MARK: - Weekly AI Response
+
+    private func generateWeeklyResponse() async {
+        // Get entries from the last 7 days
+        let calendar = Calendar.current
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let weekEntries = moodEntries.filter { $0.date >= weekAgo }
+
+        let eveningEntries = weekEntries.filter { $0.checkInType == .evening }
+        let morningEntries = weekEntries.filter { $0.checkInType == .morning }
+
+        // Calculate average mood
+        var avgMood: Double = 0
+        if !eveningEntries.isEmpty {
+            avgMood = Double(eveningEntries.reduce(0) { $0 + $1.moodScore }) / Double(eveningEntries.count)
+        }
+
+        // Build summary of the week
+        var weekSummary = "Riepilogo settimanale dell'utente:\n"
+        weekSummary += "- Check-in serali completati: \(eveningEntries.count)\n"
+        weekSummary += "- Check-in mattutini completati: \(morningEntries.count)\n"
+        weekSummary += "- Umore medio: \(String(format: "%.1f", avgMood)) su una scala da -2 a +2\n"
+
+        // Collect moods
+        var moodCounts: [String: Int] = [:]
+        for entry in eveningEntries {
+            for moodId in entry.selectedMoodIds {
+                moodCounts[moodId, default: 0] += 1
+            }
+        }
+        let topMoods = moodCounts.sorted { $0.value > $1.value }.prefix(5)
+        let moodLabels = topMoods.compactMap { moodId, _ in
+            MoodAdjectivesLibrary.adjectives.first { $0.id == moodId }?.masculine
+        }
+        if !moodLabels.isEmpty {
+            weekSummary += "- Stati d'animo piu frequenti: \(moodLabels.joined(separator: ", "))\n"
+        }
+
+        // Collect motivations and fears
+        let motivations = morningEntries.compactMap { $0.morningMotivation }.filter { !$0.isEmpty }
+        let fears = morningEntries.compactMap { $0.morningFear }.filter { !$0.isEmpty }
+
+        if !motivations.isEmpty {
+            weekSummary += "- Motivazioni della settimana: \(motivations.joined(separator: "; "))\n"
+        }
+        if !fears.isEmpty {
+            weekSummary += "- Preoccupazioni della settimana: \(fears.joined(separator: "; "))\n"
+        }
+
+        // Create prompt for AI
+        let userPrompt = """
+        \(weekSummary)
+
+        Basandoti su questi dati, fornisci un breve riepilogo empatico di come e andata la settimana dell'utente e dai 2-3 consigli personalizzati per migliorare il suo benessere nella prossima settimana. Sii incoraggiante ma realistico.
+        """
+
+        // Add user message
+        let userMsg = ChatMessage(role: .user, content: "[Riepilogo settimanale automatico]")
+        userMsg.conversation = conversation
+        conversation.messages.append(userMsg)
+        conversation.updatedAt = .now
+        try? context.save()
+
+        // Generate AI response
+        await MainActor.run { sending = true }
+
+        do {
+            let model = currentModel()
+            let response = try await AIService.shared.chatWithCrisisDetection(
+                messages: [ProviderMessage(role: "user", content: userPrompt)],
+                model: model,
+                temperature: chatTemperature,
+                maxTokens: 600
+            )
+
+            await MainActor.run {
+                let aiMsg = ChatMessage(role: .assistant, content: response)
+                aiMsg.conversation = conversation
+                conversation.messages.append(aiMsg)
+                conversation.updatedAt = .now
+                try? context.save()
+
+                // Save as weekly entry
+                let weeklyEntry = MoodEntry(
+                    checkInType: .weekly,
+                    moodScore: Int(round(avgMood)),
+                    weeklyAIResponse: response,
+                    weeklyMoodSummary: weekSummary
+                )
+                context.insert(weeklyEntry)
+                try? context.save()
+
+                sending = false
+            }
+        } catch {
+            await MainActor.run {
+                let errMsg = ChatMessage(role: .assistant, content: "Non sono riuscito a generare il riepilogo settimanale. Riprova piu tardi.")
+                errMsg.conversation = conversation
+                conversation.messages.append(errMsg)
+                try? context.save()
+                sending = false
+            }
+        }
     }
     
     private var composer: some View {
@@ -603,18 +705,6 @@ extension SingleChatView {
         }
         return result
     }
-    private func exportConversation() {
-        let text = generateMarkdown()
-        let filename = "Serenity-\(conversation.title.replacingOccurrences(of: " ", with: "_"))-\(Int(Date().timeIntervalSince1970)).md"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        do {
-            try text.data(using: .utf8)?.write(to: url)
-            exportURL = url
-            showShare = true
-        } catch {
-            print("Export error: \(error)")
-        }
-    }
     
     private func generateMarkdown() -> String {
         var md = "# \(conversation.title)\n\n"
@@ -817,11 +907,11 @@ struct ChatBubble: View {
 }
 
 enum ChatStyle {
-    // Purple gradient background with good contrast
+    // Sfumatura più chiara e delicata, senza neri
     static let background: LinearGradient = LinearGradient(
         colors: [
-            Color(red: 82/255, green: 36/255, blue: 154/255),   // deep purple
-            Color(red: 140/255, green: 82/255, blue: 255/255)   // vivid purple
+            Color(red: 110/255, green: 70/255, blue: 180/255),   // viola medio (più chiaro del precedente)
+            Color(red: 170/255, green: 130/255, blue: 255/255)  // lavanda chiaro
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

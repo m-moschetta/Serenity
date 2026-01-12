@@ -25,6 +25,22 @@ struct OnboardingView: View {
     @State private var showSafetySheet = false
     @State private var showCrisisOverlay = false
 
+    // Tone preferences step
+    @State private var showingToneStep = false
+    @State private var toneEmpathy: ToneEmpathy = .empathetic
+    @State private var toneApproach: ToneApproach = .gentle
+    @State private var toneEnergy: ToneEnergy = .calm
+    @State private var toneMood: ToneMood = .serious
+    @State private var toneLength: ToneLength = .brief
+    @State private var toneStyle: ToneStyle = .intimate
+
+    // Notifications step
+    @State private var showingNotificationsStep = false
+    @State private var notificationsEnabled = true
+    @State private var morningTime = Calendar.current.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
+    @State private var eveningTime = Calendar.current.date(from: DateComponents(hour: 21, minute: 0)) ?? Date()
+    @State private var weeklyEnabled = true
+
     private var currentQuestion: OnboardingQuestion { questions[currentIndex] }
 
     var body: some View {
@@ -33,17 +49,39 @@ struct OnboardingView: View {
                 let isCompactHeight = proxy.size.height < 750
                 ScrollView {
                     VStack(spacing: 14) {
-                        progressHeader
-                            .padding(.bottom, 4)
-                        QuestionCard(
-                            question: currentQuestion,
-                            selections: selectionAnswers[currentQuestion.id] ?? [],
-                            text: textAnswers[currentQuestion.id] ?? "",
-                            onToggle: toggleSelection,
-                            onTextChange: { textAnswers[currentQuestion.id] = $0 }
-                        )
-                        if let reason = currentQuestion.reason {
-                            SkipFlowButton(title: "Salta questo motivo", action: { skip(reason: reason) })
+                        if showingNotificationsStep {
+                            notificationsStepHeader
+                                .padding(.bottom, 4)
+                            NotificationsSetupCard(
+                                notificationsEnabled: $notificationsEnabled,
+                                morningTime: $morningTime,
+                                eveningTime: $eveningTime,
+                                weeklyEnabled: $weeklyEnabled
+                            )
+                        } else if showingToneStep {
+                            toneStepHeader
+                                .padding(.bottom, 4)
+                            ToneSelectionCard(
+                                empathy: $toneEmpathy,
+                                approach: $toneApproach,
+                                energy: $toneEnergy,
+                                mood: $toneMood,
+                                length: $toneLength,
+                                style: $toneStyle
+                            )
+                        } else {
+                            progressHeader
+                                .padding(.bottom, 4)
+                            QuestionCard(
+                                question: currentQuestion,
+                                selections: selectionAnswers[currentQuestion.id] ?? [],
+                                text: textAnswers[currentQuestion.id] ?? "",
+                                onToggle: toggleSelection,
+                                onTextChange: { textAnswers[currentQuestion.id] = $0 }
+                            )
+                            if let reason = currentQuestion.reason {
+                                SkipFlowButton(title: "Salta questo motivo", action: { skip(reason: reason) })
+                            }
                         }
                         Spacer(minLength: isCompactHeight ? 40 : 80)
                     }
@@ -56,17 +94,33 @@ struct OnboardingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if currentIndex > 0 {
+                    if showingNotificationsStep {
+                        Button("Indietro") { showingNotificationsStep = false }
+                    } else if showingToneStep {
+                        Button("Indietro") { showingToneStep = false }
+                    } else if currentIndex > 0 {
                         Button("Indietro") { goBack() }
                     }
                 }
             }
         }
         .safeAreaInset(edge: .bottom) {
-            actionBar
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .background(.thinMaterial)
+            if showingNotificationsStep {
+                notificationsActionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .background(.thinMaterial)
+            } else if showingToneStep {
+                toneActionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .background(.thinMaterial)
+            } else {
+                actionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .background(.thinMaterial)
+            }
         }
         .sheet(isPresented: $showSafetySheet) {
             SafetyCheckSheet { choice in
@@ -86,6 +140,83 @@ struct OnboardingView: View {
     }
 
     // MARK: - UI
+
+    private var toneStepHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Come preferisci che ti parli Tranquiz?")
+                .font(.headline)
+            Text("Personalizza lo stile di comunicazione")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var toneActionBar: some View {
+        VStack(spacing: 12) {
+            Button(action: goToNotifications) {
+                Text("Avanti")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(ChatStyle.accentPurpleDark)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+
+            Text("Potrai modificare queste preferenze in qualsiasi momento dal profilo.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+        }
+    }
+
+    private var notificationsStepHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Vuoi attivare i promemoria giornalieri?")
+                .font(.headline)
+            Text("Ti aiuteranno a riflettere sul tuo stato d'animo")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var notificationsActionBar: some View {
+        VStack(spacing: 12) {
+            Button(action: finish) {
+                Text("Inizia")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(ChatStyle.accentPurpleDark)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+
+            Text("Potrai modificare gli orari in qualsiasi momento dal profilo.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+        }
+    }
+
+    private func goToNotifications() {
+        // Save tone preferences
+        TonePreferences.shared.saveAll(
+            empathy: toneEmpathy,
+            approach: toneApproach,
+            energy: toneEnergy,
+            mood: toneMood,
+            length: toneLength,
+            style: toneStyle
+        )
+        withAnimation(.easeInOut) {
+            showingNotificationsStep = true
+        }
+    }
 
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -170,7 +301,10 @@ struct OnboardingView: View {
         evaluateSafety(for: currentQuestion)
 
         if isLastQuestion {
-            finish()
+            // Show tone step instead of finishing directly
+            withAnimation(.easeInOut) {
+                showingToneStep = true
+            }
             return
         }
 
@@ -201,6 +335,9 @@ struct OnboardingView: View {
     }
 
     private func finish() {
+        // Save notification settings
+        saveNotificationSettings()
+
         let allAnswers = buildAnswers()
         let profile = OnboardingProfile(
             createdAt: .now,
@@ -214,6 +351,28 @@ struct OnboardingView: View {
         onboardingCompleted = true
         sendWelcomeMessage(profile: profile)
         dismiss()
+    }
+
+    private func saveNotificationSettings() {
+        UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled")
+        UserDefaults.standard.set(weeklyEnabled, forKey: "weeklyNotificationEnabled")
+
+        let morningComponents = Calendar.current.dateComponents([.hour, .minute], from: morningTime)
+        let eveningComponents = Calendar.current.dateComponents([.hour, .minute], from: eveningTime)
+
+        UserDefaults.standard.set(morningComponents.hour ?? 8, forKey: "morningCheckInHour")
+        UserDefaults.standard.set(morningComponents.minute ?? 0, forKey: "morningCheckInMinute")
+        UserDefaults.standard.set(eveningComponents.hour ?? 21, forKey: "eveningCheckInHour")
+        UserDefaults.standard.set(eveningComponents.minute ?? 0, forKey: "eveningCheckInMinute")
+
+        if notificationsEnabled {
+            Task {
+                let granted = await NotificationManager.shared.requestPermission()
+                if granted {
+                    NotificationManager.shared.rescheduleAll()
+                }
+            }
+        }
     }
 
     private func buildAnswers() -> [OnboardingAnswer] {
@@ -437,5 +596,189 @@ private struct SafetyCheckSheet: View {
             }
             .padding()
         }
+    }
+}
+
+// MARK: - Tone Selection Card
+
+private struct ToneSelectionCard: View {
+    @Binding var empathy: ToneEmpathy
+    @Binding var approach: ToneApproach
+    @Binding var energy: ToneEnergy
+    @Binding var mood: ToneMood
+    @Binding var length: ToneLength
+    @Binding var style: ToneStyle
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            ToneOptionGroup(
+                label: "Empatia",
+                options: ToneEmpathy.allCases,
+                selected: empathy,
+                onSelect: { empathy = $0 }
+            )
+
+            ToneOptionGroup(
+                label: "Approccio",
+                options: ToneApproach.allCases,
+                selected: approach,
+                onSelect: { approach = $0 }
+            )
+
+            ToneOptionGroup(
+                label: "Energia",
+                options: ToneEnergy.allCases,
+                selected: energy,
+                onSelect: { energy = $0 }
+            )
+
+            ToneOptionGroup(
+                label: "Tono",
+                options: ToneMood.allCases,
+                selected: mood,
+                onSelect: { mood = $0 }
+            )
+
+            ToneOptionGroup(
+                label: "Lunghezza risposte",
+                options: ToneLength.allCases,
+                selected: length,
+                onSelect: { length = $0 }
+            )
+
+            ToneOptionGroup(
+                label: "Stile",
+                options: ToneStyle.allCases,
+                selected: style,
+                onSelect: { style = $0 }
+            )
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+    }
+}
+
+private struct ToneOptionGroup<T: RawRepresentable & CaseIterable & Hashable>: View where T.RawValue == String {
+    let label: String
+    let options: [T]
+    let selected: T
+    let onSelect: (T) -> Void
+
+    private func labelFor(_ option: T) -> String {
+        switch option {
+        case let e as ToneEmpathy: return e.label
+        case let a as ToneApproach: return a.label
+        case let e as ToneEnergy: return e.label
+        case let m as ToneMood: return m.label
+        case let l as ToneLength: return l.label
+        case let s as ToneStyle: return s.label
+        default: return option.rawValue
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                ForEach(options, id: \.self) { option in
+                    Button {
+                        onSelect(option)
+                    } label: {
+                        Text(labelFor(option))
+                            .font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selected == option ? ChatStyle.accentPurpleDark : Color(.systemBackground))
+                            .foregroundColor(selected == option ? .white : .primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Notifications Setup Card
+
+private struct NotificationsSetupCard: View {
+    @Binding var notificationsEnabled: Bool
+    @Binding var morningTime: Date
+    @Binding var eveningTime: Date
+    @Binding var weeklyEnabled: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Main toggle
+            Toggle(isOn: $notificationsEnabled) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Attiva promemoria")
+                        .font(.headline)
+                    Text("Ricevi notifiche per i check-in giornalieri")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(ChatStyle.accentPurpleDark)
+
+            if notificationsEnabled {
+                Divider()
+
+                // Morning time
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "sun.horizon.fill")
+                            .foregroundStyle(.orange)
+                        Text("Check-in mattutino")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    DatePicker("", selection: $morningTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+
+                // Evening time
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "moon.stars.fill")
+                            .foregroundStyle(.indigo)
+                        Text("Check-in serale")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    DatePicker("", selection: $eveningTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                }
+
+                Divider()
+
+                // Weekly toggle
+                Toggle(isOn: $weeklyEnabled) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: "calendar.badge.clock")
+                                .foregroundStyle(ChatStyle.accentPurpleDark)
+                            Text("Riepilogo settimanale")
+                                .font(.subheadline.weight(.medium))
+                        }
+                        Text("Ricevi un'analisi AI del tuo umore ogni domenica")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .tint(ChatStyle.accentPurpleDark)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+        .animation(.easeInOut, value: notificationsEnabled)
     }
 }

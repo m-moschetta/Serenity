@@ -56,8 +56,21 @@ final class AIService {
     func prepareMessages(userMessages: [ProviderMessage]) -> [ProviderMessage] {
         var messages = [ProviderMessage]()
 
-        // Aggiungi sempre il prompt terapeutico come primo messaggio di sistema
-        messages.append(ProviderMessage(role: "system", content: TherapeuticPrompt.systemPrompt))
+        // Build the complete system prompt with tone instructions
+        let basePrompt = TherapeuticPrompt.systemPrompt
+        let toneInstructions = TonePreferences.shared.buildToneInstructions()
+
+        // Get onboarding context if available
+        let onboardingContext = OnboardingStorage.shared.summary
+
+        // Combine: base prompt + tone instructions + onboarding context
+        var fullSystemPrompt = basePrompt + "\n\n" + toneInstructions
+        if !onboardingContext.isEmpty {
+            fullSystemPrompt += "\n\n" + onboardingContext
+        }
+
+        // Aggiungi il prompt di sistema completo
+        messages.append(ProviderMessage(role: "system", content: fullSystemPrompt))
 
         // Aggiungi i messaggi dell'utente
         messages.append(contentsOf: userMessages)

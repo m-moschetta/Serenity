@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fallback entries per ListPreference dei modelli, sostituiti a runtime -->
+    <string-array name="openai_model_entries_default">
+        <item>gpt-5</item>
+        <item>gpt-5-mini</item>
+    </string-array>
+    <string-array name="openai_model_values_default">
+        <item>gpt-5</item>
+        <item>gpt-5-mini</item>
+    </string-array>
+
+    <string-array name="anthropic_model_entries_default">
+        <item>@string/provider_anthropic_default_model</item>
+    </string-array>
+    <string-array name="anthropic_model_values_default">
+        <item>@string/provider_anthropic_default_model</item>
+    </string-array>
+
+    <string-array name="perplexity_model_entries_default">
+        <item>@string/provider_perplexity_default_model</item>
+    </string-array>
+    <string-array name="perplexity_model_values_default">
+        <item>@string/provider_perplexity_default_model</item>
+    </string-array>
+
+    <string-array name="groq_model_entries_default">
+        <item>@string/provider_groq_default_model</item>
+    </string-array>
+    <string-array name="groq_model_values_default">
+        <item>@string/provider_groq_default_model</item>
+    </string-array>
+</resources>

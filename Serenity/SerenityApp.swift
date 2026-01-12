@@ -16,6 +16,7 @@ struct SerenityApp: App {
             ChatMessage.self,
             MemorySummary.self,
             Attachment.self,
+            MoodEntry.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -29,7 +30,19 @@ struct SerenityApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    setupNotifications()
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    private func setupNotifications() {
+        Task {
+            let granted = await NotificationManager.shared.requestPermission()
+            if granted {
+                NotificationManager.shared.rescheduleAll()
+            }
+        }
     }
 }

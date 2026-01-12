@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.xccheckout
+*.xcscheme
+!*.xcscheme/management.plist
+*.managedmetadata
+*.xcuserstate
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.xcarchive
+
+# Android
+**/build/
+**/.gradle/
+**/local.properties
+**/*.apk
+**/*.aab
+**/*.dex
+**/*.class
+**/captures/
+
+# Android Studio / IntelliJ
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+!**/.idea/runConfigurations/
+
+# Log files
+*.log
+
+# Build outputs
+build.log
+Tranquiz 2025-11-03 20-00-31/

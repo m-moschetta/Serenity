@@ -128,6 +128,19 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                     }
                 }
 
+                ToneSettingsSection()
+
+                NotificationSettingsSection()
+
+                Section("Aspetto") {
+                    Picker("Tema", selection: $preferredAppearance) {
+                        Text("Sistema").tag("system")
+                        Text("Chiaro").tag("light")
+                        Text("Scuro").tag("dark")
+                    }
+                    .pickerStyle(.segmented)
+                }
+
                 if developerMode {
                     Section("Chat") {
                         VStack(alignment: .leading, spacing: 8) {
@@ -152,13 +165,13 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                                     .textInputAutocapitalization(.never)
                                     .textContentType(.password)
                                     .autocorrectionDisabled()
-                                    .foregroundStyle(Color.black)
+                                    .foregroundStyle(.primary)
                             } else {
                                 SecureField("API Key", text: $apiKey)
                                     .textInputAutocapitalization(.never)
                                     .textContentType(.password)
                                     .autocorrectionDisabled()
-                                    .foregroundStyle(Color.black)
+                                    .foregroundStyle(.primary)
                             }
                             Button(showingKey ? "Nascondi" : "Mostra") { showingKey.toggle() }
                         }
@@ -175,7 +188,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             .textInputAutocapitalization(.never)
                             .textContentType(.password)
                             .autocorrectionDisabled()
-                            .foregroundStyle(Color.black)
+                            .foregroundStyle(.primary)
                         Button("Salva") {
                             KeychainService.shared.mistralApiKey = mistralKey.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
@@ -187,7 +200,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             .textInputAutocapitalization(.never)
                             .textContentType(.password)
                             .autocorrectionDisabled()
-                            .foregroundStyle(Color.black)
+                            .foregroundStyle(.primary)
                         Button("Salva") {
                             KeychainService.shared.groqApiKey = groqKey.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
@@ -258,7 +271,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             TextField("Modello personalizzato", text: $openaiModel)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
-                                .foregroundStyle(Color.black)
+                                .foregroundStyle(.primary)
                         } else if aiProvider == "mistral" {
                             Picker("Modello", selection: $mistralModel) {
                                 ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
@@ -291,7 +304,7 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             TextField("Modello personalizzato", text: $mistralModel)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
-                                .foregroundStyle(Color.black)
+                                .foregroundStyle(.primary)
                         } else if aiProvider == "groq" {
                             Picker("Modello", selection: $groqModel) {
                                 ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
@@ -307,19 +320,8 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             TextField("Modello personalizzato", text: $groqModel)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
-                                .foregroundStyle(Color.black)
+                                .foregroundStyle(.primary)
                         }
-                    }
-
-                    // Chat: single chat mode enforced by design now
-
-                    Section("Aspetto") {
-                        Picker("Tema", selection: $preferredAppearance) {
-                            Text("Sistema").tag("system")
-                            Text("Chiaro").tag("light")
-                            Text("Scuro").tag("dark")
-                        }
-                        .pickerStyle(.segmented)
                     }
 
                     Section("Multimodale") {
@@ -334,9 +336,9 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                         .foregroundStyle(.primary)
                         if showPromptEditor {
                             Text("Prompt di sistema")
-                            TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
+                            TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(.primary)
                             Text("Prompt riassunto")
-                            TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(Color.black)
+                            TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(.primary)
                             HStack {
                                 Button("Reset") {
                                     systemPrompt = """
@@ -473,5 +475,107 @@ extension SettingsView {
             diagMessage = "Errore: \(last)"
         }
         showingDiagAlert = true
+    }
+}
+
+// MARK: - Tone Settings Section
+
+private struct ToneSettingsSection: View {
+    @State private var empathy: ToneEmpathy = TonePreferences.shared.empathy
+    @State private var approach: ToneApproach = TonePreferences.shared.approach
+    @State private var energy: ToneEnergy = TonePreferences.shared.energy
+    @State private var mood: ToneMood = TonePreferences.shared.mood
+    @State private var length: ToneLength = TonePreferences.shared.length
+    @State private var style: ToneStyle = TonePreferences.shared.style
+
+    var body: some View {
+        Section("Tono dell'assistente") {
+            TonePickerRow(
+                title: "Empatia",
+                subtitle: "Quanto vuoi che sia comprensivo",
+                options: ToneEmpathy.allCases,
+                selection: $empathy,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: empathy) { _, newValue in
+                TonePreferences.shared.empathy = newValue
+            }
+
+            TonePickerRow(
+                title: "Approccio",
+                subtitle: "Gentile o diretto",
+                options: ToneApproach.allCases,
+                selection: $approach,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: approach) { _, newValue in
+                TonePreferences.shared.approach = newValue
+            }
+
+            TonePickerRow(
+                title: "Energia",
+                subtitle: "Calmo o motivante",
+                options: ToneEnergy.allCases,
+                selection: $energy,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: energy) { _, newValue in
+                TonePreferences.shared.energy = newValue
+            }
+
+            TonePickerRow(
+                title: "Tono",
+                subtitle: "Serio o leggero",
+                options: ToneMood.allCases,
+                selection: $mood,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: mood) { _, newValue in
+                TonePreferences.shared.mood = newValue
+            }
+
+            TonePickerRow(
+                title: "Lunghezza risposte",
+                subtitle: "Brevi o dettagliate",
+                options: ToneLength.allCases,
+                selection: $length,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: length) { _, newValue in
+                TonePreferences.shared.length = newValue
+            }
+
+            TonePickerRow(
+                title: "Stile",
+                subtitle: "Intimo o professionale",
+                options: ToneStyle.allCases,
+                selection: $style,
+                labelProvider: { $0.label }
+            )
+            .onChange(of: style) { _, newValue in
+                TonePreferences.shared.style = newValue
+            }
+        }
+    }
+}
+
+private struct TonePickerRow<T: Hashable & CaseIterable>: View {
+    let title: String
+    let subtitle: String
+    let options: [T]
+    @Binding var selection: T
+    let labelProvider: (T) -> String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Picker(title, selection: $selection) {
+                ForEach(options, id: \.self) { option in
+                    Text(labelProvider(option)).tag(option)
+                }
+            }
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }
