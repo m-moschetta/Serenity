@@ -41,7 +41,7 @@
     <string name="error_generic">Si è verificato un errore. Riprova.</string>
     <string name="safety_message">Per la tua sicurezza, contatta il 112 o un professionista.</string>
 
-    <string name="safety_block_message">Per motivi di sicurezza, questa conversazione è stata bloccata. Se ti senti in pericolo o temi di farti del male, contatta subito il 112 o un professionista della salute mentale.</string>
+    <string name="safety_block_message">Capisco che in questo momento potresti sentirti sopraffatt* da emozioni molto intense. Non sei sol*, e chiedere aiuto è un atto di grande forza. È importante che tu parli con una persona reale in grado di aiutarti davvero.\n\n📞 Dove chiedere aiuto\n\nSe sei in una situazione di emergenza, chiama il numero 112.\n\nSe tu o qualcuno che conosci ha dei pensieri suicidi, puoi chiamare:\n• Telefono Amico: 02 2327 2327 (tutti i giorni dalle 10 alle 24)\n• Samaritans: 06 77208977 (tutti i giorni dalle 13 alle 22)\n\nPer favore, contatta subito uno di questi servizi. Sono persone preparate che possono offrirti il supporto che meriti.</string>
     
     <!-- Menu Options -->
     <string name="menu_clear_chat">Cancella conversazione</string>

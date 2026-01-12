@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Empatia -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/tone_empathy_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_empathy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_empathetic" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_empathetic" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_neutral" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_neutral" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Approccio -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tone_approach_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_approach"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_gentle" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_gentle" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_direct" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_direct" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Energia -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tone_energy_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_energy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_calm" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_calm" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_energetic" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_energetic" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Tono -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tone_mood_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_mood"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_serious" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_serious" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_light" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_light" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Lunghezza -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tone_length_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_length"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_brief" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_brief" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_detailed" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_detailed" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Stile -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/tone_style_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_style"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+        <com.google.android.material.chip.Chip android:id="@+id/chip_intimate" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_intimate" android:checked="true" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_professional" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/tone_professional" />
+    </com.google.android.material.chip.ChipGroup>
+
+</LinearLayout>

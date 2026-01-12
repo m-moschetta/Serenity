@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity(), OnboardingFragment.OnboardingCallback 
         binding.layoutMessageInput.visibility = View.VISIBLE
     }
 
-    override fun onOnboardingCompleted(name: String, feeling: String, goal: String) {
+    override fun onOnboardingCompleted() {
         showChatInterface()
         viewModel.onboardingCompleted()
     }
