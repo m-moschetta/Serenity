@@ -71,13 +71,13 @@ class OnboardingAdapter(
                     ContextCompat.getColor(binding.root.context, R.color.user_message_background)
                 )
                 binding.cardOption.strokeColor = ContextCompat.getColor(binding.root.context, R.color.primary_color)
-                binding.iv_option_check.visibility = View.VISIBLE
+                binding.ivOptionCheck.visibility = View.VISIBLE
             } else {
                 binding.cardOption.setCardBackgroundColor(
                     ContextCompat.getColor(binding.root.context, R.color.ai_message_background)
                 )
                 binding.cardOption.strokeColor = ContextCompat.getColor(binding.root.context, R.color.message_border)
-                binding.iv_option_check.visibility = View.INVISIBLE
+                binding.ivOptionCheck.visibility = View.INVISIBLE
             }
 
             // Counter for multi-choice

@@ -3,6 +3,7 @@ package com.tranquiz.app.data.api
 import com.tranquiz.app.data.model.ChatRequest
 import com.tranquiz.app.data.model.ChatResponse
 import com.tranquiz.app.data.model.ModelsResponse
+import com.tranquiz.app.data.therapeutic.TherapeuticPrompt
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body

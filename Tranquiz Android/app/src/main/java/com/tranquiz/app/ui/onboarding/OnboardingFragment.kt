@@ -28,7 +28,16 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class OnboardingFragment : Fragment() {
-
+    companion object {
+        /**
+         * Use this factory method to create a new instance of
+         * this fragment.
+         *
+         * @return A new instance of fragment OnboardingFragment.
+         */
+        @JvmStatic
+        fun newInstance() = OnboardingFragment()
+    }
     private var _binding: FragmentOnboardingBinding? = null
     private val binding get() = _binding!!
 
@@ -140,10 +149,10 @@ class OnboardingFragment : Fragment() {
         }
         
         if (question.reason != null) {
-            binding.tvOnboardingReason_tag.visibility = View.VISIBLE
-            binding.tvOnboardingReason_tag.text = question.reason.label
+            binding.tvOnboardingReasonTag.visibility = View.VISIBLE
+            binding.tvOnboardingReasonTag.text = question.reason.label
         } else {
-            binding.tvOnboardingReason_tag.visibility = View.GONE
+            binding.tvOnboardingReasonTag.visibility = View.GONE
         }
 
         // Switch between types
@@ -173,7 +182,7 @@ class OnboardingFragment : Fragment() {
         binding.tvOnboardingQuestion.setText(R.string.onboarding_tone_title)
         binding.tvOnboardingSubtitle.visibility = View.VISIBLE
         binding.tvOnboardingSubtitle.setText(R.string.onboarding_tone_subtitle)
-        binding.tvOnboardingReason_tag.visibility = View.GONE
+        binding.tvOnboardingReasonTag.visibility = View.GONE
         
         binding.rvOnboardingOptions.visibility = View.GONE
         binding.tilOnboardingInput.visibility = View.GONE
@@ -190,7 +199,7 @@ class OnboardingFragment : Fragment() {
         binding.tvOnboardingQuestion.text = "Vuoi attivare i promemoria giornalieri?"
         binding.tvOnboardingSubtitle.visibility = View.VISIBLE
         binding.tvOnboardingSubtitle.text = "Ti aiuteranno a riflettere sul tuo stato d'animo"
-        binding.tvOnboardingReason_tag.visibility = View.GONE
+        binding.tvOnboardingReasonTag.visibility = View.GONE
         
         binding.rvOnboardingOptions.visibility = View.GONE
         binding.tilOnboardingInput.visibility = View.GONE
@@ -440,8 +449,8 @@ class OnboardingFragment : Fragment() {
             val db = AppDatabase.getDatabase(requireContext())
             val message = Message(
                 conversationId = Constants.Conversation.DEFAULT_CONVERSATION_ID,
-                role = Constants.Conversation.ROLE_ASSISTANT,
                 content = intro,
+                isFromUser = false,
                 timestamp = System.currentTimeMillis()
             )
             db.messageDao().insertMessage(message)
