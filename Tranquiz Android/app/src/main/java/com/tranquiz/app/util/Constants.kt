@@ -28,6 +28,7 @@ object Constants {
 
         // Sistema
         const val SYSTEM_PROMPT = "pref_system_prompt"
+        const val DEVELOPER_MODE = "pref_developer_mode"
 
         // Tone preferences
         const val TONE_EMPATHY = "pref_tone_empathy"      // "empathetic" | "neutral"
@@ -36,15 +37,6 @@ object Constants {
         const val TONE_MOOD = "pref_tone_mood"            // "serious" | "light"
         const val TONE_LENGTH = "pref_tone_length"        // "brief" | "detailed"
         const val TONE_STYLE = "pref_tone_style"          // "intimate" | "professional"
-
-        // Notifiche e check-in
-        const val NOTIFICATIONS_ENABLED = "pref_notifications_enabled"
-        const val WEEKLY_SUMMARY_ENABLED = "pref_weekly_summary_enabled"
-        const val MORNING_CHECKIN_HOUR = "pref_morning_checkin_hour"
-        const val MORNING_CHECKIN_MINUTE = "pref_morning_checkin_minute"
-        const val EVENING_CHECKIN_HOUR = "pref_evening_checkin_hour"
-        const val EVENING_CHECKIN_MINUTE = "pref_evening_checkin_minute"
-        const val ONBOARDING_SUMMARY = "onboardingSummary"
     }
 
     // ==================== Configurazione API ====================

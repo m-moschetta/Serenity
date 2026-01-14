@@ -41,11 +41,16 @@
     <string name="error_generic">Si è verificato un errore. Riprova.</string>
     <string name="safety_message">Per la tua sicurezza, contatta il 112 o un professionista.</string>
 
-    <string name="safety_block_message">Capisco che in questo momento potresti sentirti sopraffatt* da emozioni molto intense. Non sei sol*, e chiedere aiuto è un atto di grande forza. È importante che tu parli con una persona reale in grado di aiutarti davvero.\n\n📞 Dove chiedere aiuto\n\nSe sei in una situazione di emergenza, chiama il numero 112.\n\nSe tu o qualcuno che conosci ha dei pensieri suicidi, puoi chiamare:\n• Telefono Amico: 02 2327 2327 (tutti i giorni dalle 10 alle 24)\n• Samaritans: 06 77208977 (tutti i giorni dalle 13 alle 22)\n\nPer favore, contatta subito uno di questi servizi. Sono persone preparate che possono offrirti il supporto che meriti.</string>
+    <string name="safety_block_message">Per motivi di sicurezza, questa conversazione è stata bloccata. Se ti senti in pericolo o temi di farti del male, contatta subito il 112 o un professionista della salute mentale.</string>
+    
+    <!-- Navigation -->
+    <string name="nav_chat">Chat</string>
+    <string name="nav_profile">Profilo</string>
     
     <!-- Menu Options -->
     <string name="menu_clear_chat">Cancella conversazione</string>
     <string name="menu_settings">Impostazioni</string>
+    <string name="menu_profile">Profilo</string>
     <string name="menu_about">Informazioni</string>
     
     <!-- Confirmation Dialogs -->
@@ -240,4 +245,69 @@
         <item>intimate</item>
         <item>professional</item>
     </string-array>
+    
+    <!-- Profile -->
+    <string name="profile_title">Profilo</string>
+    <string name="profile_check_in">Check-in</string>
+    <string name="profile_mood">Umore</string>
+    <string name="profile_trend">Trend</string>
+    <string name="profile_trend_improving">In crescita</string>
+    <string name="profile_trend_stable">Stabile</string>
+    <string name="profile_trend_declining">In calo</string>
+    <string name="profile_daily_check_in">Check-in giornaliero</string>
+    <string name="profile_morning_check_in">Mattutino</string>
+    <string name="profile_morning_subtitle">Motivazione &amp; obiettivi</string>
+    <string name="profile_evening_check_in">Serale</string>
+    <string name="profile_evening_subtitle">Come ti senti?</string>
+    <string name="profile_personalization">Personalizzazione</string>
+    <string name="profile_tone_settings">Tono di voce</string>
+    <string name="profile_onboarding_summary">Profilo e preferenze</string>
+    <string name="profile_recent_check_ins">Check-in recenti</string>
+    <string name="profile_start_tracking">Inizia a tracciare il tuo umore</string>
+    <string name="profile_start_tracking_subtitle">I check-in giornalieri ti aiuteranno a capire meglio come ti senti nel tempo.</string>
+    <string name="profile_period_week">Settimana</string>
+    <string name="profile_period_month">Mese</string>
+    <string name="profile_period_year">Anno</string>
+    
+    <!-- Check-in -->
+    <string name="check_in_morning_title">Check-in Mattutino</string>
+    <string name="check_in_morning_motivation">Cosa ti motiva oggi?</string>
+    <string name="check_in_morning_motivation_hint">Scrivi cosa ti spinge ad affrontare la giornata…</string>
+    <string name="check_in_morning_fear">C\'è qualcosa che ti preoccupa?</string>
+    <string name="check_in_morning_fear_hint">Opzionale: condividi le tue preoccupazioni…</string>
+    <string name="check_in_evening_title">Check-in Serale</string>
+    <string name="check_in_evening_question">Come ti senti stasera?</string>
+    <string name="check_in_evening_hint">Seleziona gli aggettivi che descrivono meglio il tuo stato d\'animo</string>
+    <string name="check_in_save">Salva</string>
+    <string name="check_in_cancel">Annulla</string>
+    
+    <!-- Mood adjectives -->
+    <string name="mood_very_happy">Molto felice</string>
+    <string name="mood_happy">Felice</string>
+    <string name="mood_neutral">Neutrale</string>
+    <string name="mood_sad">Triste</string>
+    <string name="mood_very_sad">Molto triste</string>
+    <string name="mood_anxious">Ansioso</string>
+    <string name="mood_calm">Calmo</string>
+    <string name="mood_energetic">Energetico</string>
+    <string name="mood_tired">Stanco</string>
+    <string name="mood_peaceful">Sereno</string>
+    <string name="mood_stressed">Stressato</string>
+    <string name="mood_grateful">Gratificato</string>
+    <string name="mood_hopeful">Speranzoso</string>
+    <string name="mood_frustrated">Frustrato</string>
+    <string name="mood_content">Contento</string>
+    <string name="mood_overwhelmed">Sopraffatto</string>
+    <string name="mood_motivated">Motivato</string>
+    <string name="mood_lonely">Solo</string>
+    <string name="mood_loved">Amato</string>
+    <string name="mood_confident">Sicuro</string>
+    <string name="mood_uncertain">Incertezza</string>
+    
+    <!-- Settings M3 -->
+    <string name="pref_provider_section">Provider AI</string>
+    <string name="pref_info_section">Informazioni</string>
+    <string name="pref_version_title">Versione</string>
+    <string name="pref_reset_onboarding_title">Ripristina onboarding</string>
+    <string name="pref_reset_onboarding_summary">Mostra di nuovo la schermata di benvenuto</string>
 </resources>

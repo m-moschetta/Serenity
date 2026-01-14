@@ -28,33 +28,20 @@ object ModelCatalog {
     fun defaultModels(provider: AIProvider): List<String> {
         return when (provider) {
             AIProvider.OPENAI -> listOf(
-                "gpt-5.2",
                 "gpt-5-mini",
-                "gpt-5",
-                "gpt-4.1-mini",
-                "gpt-4o-mini",
-                "o4-mini",
-                "gpt-4o",
-                "gpt-4.1"
+                "gpt-5"
             )
             AIProvider.GROQ -> listOf(
-                "llama3-8b-8192",
-                "llama3-70b-8192",
-                "mixtral-8x7b-32768",
-                "gemma2-9b-it",
-                "gemma-7b-it",
-                "openai/gpt-oss-120b",
-                "openai/gpt-oss-20b"
+                "llama-3.1-70b-versatile",
+                "llama3-8b-8192"
             )
             AIProvider.ANTHROPIC -> listOf(
                 "claude-3-5-sonnet-20241022",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-latest"
+                "claude-3-5-haiku-20241022"
             )
             AIProvider.PERPLEXITY -> listOf(
                 "llama-3.1-sonar-large-128k-online",
-                "llama-3.1-sonar-small-128k-online",
-                "sonar-reasoning-latest"
+                "llama-3.1-sonar-small-128k-online"
             )
         }
     }

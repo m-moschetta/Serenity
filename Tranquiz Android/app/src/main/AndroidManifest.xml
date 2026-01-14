@@ -20,7 +20,8 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Tranquiz">
+            android:theme="@style/Theme.Tranquiz"
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -36,6 +37,12 @@
             android:name=".ui.SafetyActivity"
             android:exported="false"
             android:theme="@style/Theme.Tranquiz" />
+        
+        <activity
+            android:name=".ui.ProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Tranquiz"
+            android:parentActivityName=".ui.MainActivity" />
         
     </application>
 
