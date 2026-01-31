@@ -68,7 +68,6 @@
     <!-- Provider Configurations -->
     <!-- Gateway (Worker) Configuration -->
     <string name="gateway_base_url">https://llm-proxy-gateway.mariomos94.workers.dev/</string>
-    <string name="gateway_api_key">your-worker-token-here</string>
 
     <!-- OpenAI -->
     <string name="provider_openai_base_url">https://api.openai.com/</string>

@@ -16,6 +16,7 @@ import com.tranquiz.app.R
 import com.tranquiz.app.data.api.ApiClient
 import com.tranquiz.app.data.catalog.ModelCatalog
 import com.tranquiz.app.data.model.AIProvider
+import com.tranquiz.app.data.preferences.SecurePreferences
 import com.tranquiz.app.databinding.ActivitySettingsBinding
 import com.tranquiz.app.util.Constants
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        migrateGatewayApiKeyToSecureIfNeeded()
 
         initializeSystemPrompt()
         setupToolbar()
@@ -49,73 +51,70 @@ class SettingsActivity : AppCompatActivity() {
     }
     
     private fun initializeSystemPrompt() {
-        val currentPrompt = prefs.getString("pref_system_prompt", "") ?: ""
+        val currentPrompt = prefs.getString(Constants.Prefs.SYSTEM_PROMPT, "") ?: ""
         if (currentPrompt.isBlank()) {
             // Prompt di sistema da iOS
             val defaultPrompt = """
-Sei un chatbot progettato per supportare le persone attraverso un dialogo empatico, personalizzato e rispettoso, ispirato al modo in cui un terapeuta umano esperto si relaziona con i propri pazienti. Il tuo scopo è offrire uno spazio di sfogo sicuro, guidato e contenuto, che possa sostenere l'utente nella comprensione e gestione delle proprie emozioni, difficoltà quotidiane, dubbi esistenziali e blocchi interiori, nel rispetto dei limiti del tuo ruolo non terapeutico.
+<role>
+Sei Tranquiz, un coach e supporto psicologico per le persone che parlano italiano. Sei empatico, rispettoso e professionale come un esperto umano.
+<\role>
 
-🎯 Obiettivo principale
-Fornire ascolto attivo, supporto emotivo e spunti di riflessione attraverso un linguaggio personalizzato e umano. Le tue risposte devono sempre far sentire la persona:
+<objective>
+- Offri uno spazio di sfogo sicuro, guidato e contenuto
+- Sostieni l’utente nella comprensione e gestione di
+    - Emozioni
+    - Difficoltà
+    - Blocchi interiori
+    - Dubbi esistenziali
+- Fornisci
+    - Ascolto attivo
+    - Spunti di riflessione
+    - Supporto emotivo
+- Le tue risposte devono sempre far sentire la persona:
+    - Ascoltata profondamente,
+    - Accolta senza giudizio,
+    - Mai assecondata né banalizzata,
+    - Rispettata nei tempi e nei modi della propria comunicazione.
+<\objective>
 
-- ascoltata profondamente,
-- accolta senza giudizio,
-- mai asseconda né banalizzata,
-- rispettata nei tempi e nei modi della propria comunicazione.
+<instructions>
+1. Analizza attentamente tono, parole, stile comunicativo e stato emotivo dell’utente per costruire una risposta che rifletta la sua unicità.
+2. Usa le conversazioni precedenti con l’utente nelle risposte per
+    a. Considerare il contesto personale
+    b. Usare riferimenti al passato
+    c. Rilevare cambiamenti
+    d. Tenere traccia degli stati d’animo
+    e. Rispondere a bisogni impliciti
+    f. Evitare ripetizioni
+3. Usa un tono coerente con l’energia dell’utente
+4. Presenta la risposta finale nel formato richiesto
+<\instructions>
 
-Tu non sei un sostituto di un terapeuta. Non diagnostichi, non dai consigli clinici, non ti sostituisci a percorsi terapeutici reali. Sei un facilitatore, un diario emotivo intelligente, un alleato gentile nel percorso dell'utente.
+<constraints>
+- Verbosità: bassa
+- Evita
+    - Formule generiche
+    - Istruzioni meccaniche
+    - Risposte standard
+    - Frasi motivazionali vuote
+    - Diagnosi o etichette cliniche
+    - Frasi impersonali
+    - Minimizzazione del problema
+    - Tono paternalistico
+    - Tono troppo ottimista
+<\constraints>
 
-🔐 Sicurezza e gestione delle emergenze
-Se ricevi segnali anche minimi di ideazione suicidaria, autolesionismo, disturbi dell'umore gravi, disordini alimentari conclamati o altri segnali di emergenza psicologica:
+<output_format>
+*Esempio di Risposta Efficace*
 
-- Blocca immediatamente la conversazione.
-- Rispondi con tono empatico ma fermo:
-"Capisco che in questo momento potresti sentirti sopraffatt* da emozioni molto intense. Non sei sol*, e chiedere aiuto è un atto di grande forza. È importante che tu parli con una persona reale in grado di aiutarti davvero. Ti invito subito a contattare uno di questi numeri:
+Utente: Ultimamente mi sento sopraffatto dal lavoro e dalle responsabilità, non riesco a concentrarmi e ho paura che questo possa influire negativamente sulla mia carriera. Come posso gestire meglio la situazione?
 
-📞 Dove chiedere aiuto
-Se sei in una situazione di emergenza, chiama il numero 112.
-Se tu o qualcuno che conosci ha dei pensieri suicidi, puoi chiamare:
-- Telefono Amico: 02 2327 2327 (tutti i giorni dalle 10 alle 24)
-- Samaritans: 06 77208977 (tutti i giorni dalle 13 alle 22)"
+Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon punto di partenza è identificare le cause dello stress. Quali sono gli aspetti più urgenti o problematici del tuo lavoro? Da lì, possiamo pensare a tecniche per alleggerire la pressione e migliorare la concentrazione.
 
-- Non offrire alternative, non indagare ulteriormente, non proseguire la conversazione.
-- Mostra solo numeri ufficiali e fonti certificate.
-
-🧠 Modalità di risposta
-Ogni risposta deve essere profondamente personalizzata. Analizza attentamente tono, parole, stile comunicativo e stato emotivo dell'utente per costruire una risposta che rifletta la sua unicità.
-Non usare formule generiche, istruzioni meccaniche o risposte standard. Mai sembrare "robotico".
-Imita lo stile comunicativo del terapeuta umano: diretto ma delicato, empatico ma non compiacente, caldo ma centrato.
-
-📌 Lunghezza e coinvolgimento
-- Nella maggior parte dei casi rispondi in modo conciso (circa 2–5 frasi). Evita spiegazioni lunghe e liste estese.
-- Procedi per piccoli passi: valida un punto centrale, poi fai una sola domanda aperta e leggera per invitare l'utente a continuare.
-- Aumenta il livello di dettaglio solo se l'utente lo chiede esplicitamente o se serve per chiarezza/sicurezza.
-- In caso di crisi, ignora queste regole e segui il protocollo di sicurezza sopra.
-
-📚 Tecniche da utilizzare
-Applica i seguenti principi psicologici nel rispondere:
-
-- Ascolto riflessivo: parafrasa ciò che l'utente dice per dimostrargli che lo hai capito, senza distorcere il significato.
-- Domande aperte (senza pressare): "Cosa senti in questo momento?", "Ti va di raccontarmi di più?".
-- Normalizzazione (senza banalizzare): "Molte persone attraversano momenti come questo, e ogni emozione ha diritto di esistere."
-- Validazione emotiva: "È comprensibile sentirsi così dopo quello che hai vissuto."
-- Micro-suggerimenti: offri spunti gentili e non direttivi per aiutare l'utente ad avvicinarsi a nuove prospettive ("Hai mai notato se…?", "Cosa succede in te quando pensi a…?").
-- Silenzio utile: se l'utente esprime qualcosa di molto profondo, puoi rispondere anche con frasi brevi e centrate. Non riempire sempre lo spazio.
-
-🧭 Tono di voce
-- Sempre calmo, accogliente, maturo, profondo.
-- Usa un tono coerente con l'energia dell'utente: se è vulnerabile, sii morbido; se è ironico, puoi essere lievemente più leggero ma sempre centrato; se è agitato, aiutalo a rallentare.
-- Evita frasi motivazionali vuote, cliché psicologici, o toni forzatamente positivi.
-
-❌ Evita sempre:
-- Diagnosi o etichette cliniche.
-- Frasi impersonali ("Come assistente virtuale…", "Mi dispiace che ti senti così.").
-- Offerte di soluzione immediate ("Devi solo pensare positivo", "Prova a fare yoga.").
-- Minimizzazione del problema ("Capita a tutti", "Andrà tutto bene.").
-- Tono paternalistico o troppo ottimista.
+<\output_format>
 """.trimIndent()
             
-            prefs.edit().putString("pref_system_prompt", defaultPrompt).apply()
+            prefs.edit().putString(Constants.Prefs.SYSTEM_PROMPT, defaultPrompt).apply()
         }
     }
     
@@ -158,61 +157,56 @@ Applica i seguenti principi psicologici nel rispondere:
         // Modelli - solo in modalità developer (gestito in loadSettings)
         findViewById<View>(R.id.setting_model_openai)?.setOnClickListener {
             if (prefs.getBoolean(Constants.Prefs.DEVELOPER_MODE, false)) {
-                showModelDialog("pref_model_openai", AIProvider.OPENAI, R.string.pref_model_openai_title)
+                showModelDialog(Constants.Prefs.MODEL_OPENAI, AIProvider.OPENAI, R.string.pref_model_openai_title)
             }
         }
         findViewById<View>(R.id.setting_model_anthropic)?.setOnClickListener {
             if (prefs.getBoolean(Constants.Prefs.DEVELOPER_MODE, false)) {
-                showModelDialog("pref_model_anthropic", AIProvider.ANTHROPIC, R.string.pref_model_anthropic_title)
+                showModelDialog(Constants.Prefs.MODEL_ANTHROPIC, AIProvider.ANTHROPIC, R.string.pref_model_anthropic_title)
             }
         }
         findViewById<View>(R.id.setting_model_perplexity)?.setOnClickListener {
             if (prefs.getBoolean(Constants.Prefs.DEVELOPER_MODE, false)) {
-                showModelDialog("pref_model_perplexity", AIProvider.PERPLEXITY, R.string.pref_model_perplexity_title)
+                showModelDialog(Constants.Prefs.MODEL_PERPLEXITY, AIProvider.PERPLEXITY, R.string.pref_model_perplexity_title)
             }
         }
         findViewById<View>(R.id.setting_model_groq)?.setOnClickListener {
             if (prefs.getBoolean(Constants.Prefs.DEVELOPER_MODE, false)) {
-                showModelDialog("pref_model_groq", AIProvider.GROQ, R.string.pref_model_groq_title)
+                showModelDialog(Constants.Prefs.MODEL_GROQ, AIProvider.GROQ, R.string.pref_model_groq_title)
             }
         }
 
         // Tono
         findViewById<View>(R.id.setting_tone_empathy)?.setOnClickListener {
-            showToneDialog("pref_tone_empathy", R.array.tone_empathy_entries, R.array.tone_empathy_values)
+            showToneDialog(Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
         }
         findViewById<View>(R.id.setting_tone_approach)?.setOnClickListener {
-            showToneDialog("pref_tone_approach", R.array.tone_approach_entries, R.array.tone_approach_values)
+            showToneDialog(Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
         }
         findViewById<View>(R.id.setting_tone_energy)?.setOnClickListener {
-            showToneDialog("pref_tone_energy", R.array.tone_energy_entries, R.array.tone_energy_values)
+            showToneDialog(Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
         }
         findViewById<View>(R.id.setting_tone_mood)?.setOnClickListener {
-            showToneDialog("pref_tone_mood", R.array.tone_mood_entries, R.array.tone_mood_values)
+            showToneDialog(Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
         }
         findViewById<View>(R.id.setting_tone_length)?.setOnClickListener {
-            showToneDialog("pref_tone_length", R.array.tone_length_entries, R.array.tone_length_values)
+            showToneDialog(Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
         }
         findViewById<View>(R.id.setting_tone_style)?.setOnClickListener {
-            showToneDialog("pref_tone_style", R.array.tone_style_entries, R.array.tone_style_values)
+            showToneDialog(Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
         }
 
         // Gateway
         binding.settingGatewayUrl.setOnClickListener {
             showTextInputDialog(
                 getString(R.string.pref_gateway_base_url_title),
-                prefs.getString("pref_gateway_base_url", getString(R.string.gateway_base_url)) ?: "",
-                "pref_gateway_base_url"
+                prefs.getString(Constants.Prefs.GATEWAY_BASE_URL, getString(R.string.gateway_base_url)) ?: "",
+                Constants.Prefs.GATEWAY_BASE_URL
             )
         }
 
         binding.settingGatewayKey.setOnClickListener {
-            showTextInputDialog(
-                getString(R.string.pref_gateway_api_key_title),
-                prefs.getString("pref_gateway_api_key", "") ?: "",
-                "pref_gateway_api_key",
-                isPassword = true
-            )
+            showGatewayKeyDialog()
         }
 
         binding.settingGatewayTest.setOnClickListener {
@@ -277,13 +271,13 @@ Applica i seguenti principi psicologici nel rispondere:
     private fun showProviderDialog() {
         val entries = resources.getStringArray(R.array.provider_entries)
         val values = resources.getStringArray(R.array.provider_values)
-        val currentProvider = prefs.getString("pref_current_provider", "openai") ?: "openai"
+        val currentProvider = prefs.getString(Constants.Prefs.CURRENT_PROVIDER, "openai") ?: "openai"
         val currentIndex = values.indexOf(currentProvider).takeIf { it >= 0 } ?: 0
         
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.pref_current_provider_title)
             .setSingleChoiceItems(entries, currentIndex) { dialog, which ->
-                prefs.edit().putString("pref_current_provider", values[which]).apply()
+                prefs.edit().putString(Constants.Prefs.CURRENT_PROVIDER, values[which]).apply()
                 loadSettings()
                 dialog.dismiss()
                 Toast.makeText(this, "Salvato: ${entries[which]}", Toast.LENGTH_SHORT).show()
@@ -320,7 +314,7 @@ Applica i seguenti principi psicologici nel rispondere:
     }
 
     private fun showSystemPromptDialog() {
-        val currentPrompt = prefs.getString("pref_system_prompt", "") ?: ""
+        val currentPrompt = prefs.getString(Constants.Prefs.SYSTEM_PROMPT, "") ?: ""
         
         val inputLayout = TextInputLayout(this).apply {
             hint = getString(R.string.pref_system_prompt_title)
@@ -341,7 +335,7 @@ Applica i seguenti principi psicologici nel rispondere:
             .setView(inputLayout)
             .setPositiveButton(R.string.settings_save) { _, _ ->
                 val newValue = input.text?.toString() ?: ""
-                prefs.edit().putString("pref_system_prompt", newValue).apply()
+                prefs.edit().putString(Constants.Prefs.SYSTEM_PROMPT, newValue).apply()
                 loadSettings()
                 Toast.makeText(this, "Salvato: ${getString(R.string.pref_system_prompt_title)}", Toast.LENGTH_SHORT).show()
             }
@@ -388,7 +382,7 @@ Applica i seguenti principi psicologici nel rispondere:
 
     private fun loadSettings() {
         // Provider
-        val providerValue = prefs.getString("pref_current_provider", "openai") ?: "openai"
+        val providerValue = prefs.getString(Constants.Prefs.CURRENT_PROVIDER, "openai") ?: "openai"
         val providerEntries = resources.getStringArray(R.array.provider_entries)
         val providerValues = resources.getStringArray(R.array.provider_values)
         val providerIndex = providerValues.indexOf(providerValue).takeIf { it >= 0 } ?: 0
@@ -401,35 +395,35 @@ Applica i seguenti principi psicologici nel rispondere:
         if (isDeveloperMode) {
             loadModelSetting(findViewById<TextView>(R.id.tv_model_openai_title), 
                 findViewById<TextView>(R.id.tv_model_openai_value), 
-                "pref_model_openai", R.string.pref_model_openai_title)
+                Constants.Prefs.MODEL_OPENAI, R.string.pref_model_openai_title)
             loadModelSetting(findViewById<TextView>(R.id.tv_model_anthropic_title), 
                 findViewById<TextView>(R.id.tv_model_anthropic_value),
-                "pref_model_anthropic", R.string.pref_model_anthropic_title)
+                Constants.Prefs.MODEL_ANTHROPIC, R.string.pref_model_anthropic_title)
             loadModelSetting(findViewById<TextView>(R.id.tv_model_perplexity_title), 
                 findViewById<TextView>(R.id.tv_model_perplexity_value),
-                "pref_model_perplexity", R.string.pref_model_perplexity_title)
+                Constants.Prefs.MODEL_PERPLEXITY, R.string.pref_model_perplexity_title)
             loadModelSetting(findViewById<TextView>(R.id.tv_model_groq_title), 
                 findViewById<TextView>(R.id.tv_model_groq_value),
-                "pref_model_groq", R.string.pref_model_groq_title)
+                Constants.Prefs.MODEL_GROQ, R.string.pref_model_groq_title)
         }
 
         // Tono
-        loadToneSetting(binding.tvToneEmpathyValue, "pref_tone_empathy", R.array.tone_empathy_entries, R.array.tone_empathy_values)
-        loadToneSetting(binding.tvToneApproachValue, "pref_tone_approach", R.array.tone_approach_entries, R.array.tone_approach_values)
-        loadToneSetting(binding.tvToneEnergyValue, "pref_tone_energy", R.array.tone_energy_entries, R.array.tone_energy_values)
-        loadToneSetting(binding.tvToneMoodValue, "pref_tone_mood", R.array.tone_mood_entries, R.array.tone_mood_values)
-        loadToneSetting(binding.tvToneLengthValue, "pref_tone_length", R.array.tone_length_entries, R.array.tone_length_values)
-        loadToneSetting(binding.tvToneStyleValue, "pref_tone_style", R.array.tone_style_entries, R.array.tone_style_values)
+        loadToneSetting(binding.tvToneEmpathyValue, Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
+        loadToneSetting(binding.tvToneApproachValue, Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
+        loadToneSetting(binding.tvToneEnergyValue, Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
+        loadToneSetting(binding.tvToneMoodValue, Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
+        loadToneSetting(binding.tvToneLengthValue, Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
+        loadToneSetting(binding.tvToneStyleValue, Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
 
         // Gateway
-        val gatewayUrl = prefs.getString("pref_gateway_base_url", getString(R.string.gateway_base_url)) ?: getString(R.string.gateway_base_url)
+        val gatewayUrl = prefs.getString(Constants.Prefs.GATEWAY_BASE_URL, getString(R.string.gateway_base_url)) ?: getString(R.string.gateway_base_url)
         binding.tvGatewayUrlValue.text = if (gatewayUrl.length > 40) "${gatewayUrl.take(20)}...${gatewayUrl.takeLast(20)}" else gatewayUrl
         
-        val gatewayKey = prefs.getString("pref_gateway_api_key", "") ?: ""
+        val gatewayKey = SecurePreferences.getApiKey(this, "")
         binding.tvGatewayKeyValue.text = if (gatewayKey.isNotBlank()) maskSecret(gatewayKey) else "Non configurata"
 
         // System Prompt
-        val prompt = prefs.getString("pref_system_prompt", "") ?: ""
+        val prompt = prefs.getString(Constants.Prefs.SYSTEM_PROMPT, "") ?: ""
         binding.tvSystemPromptValue.text = if (prompt.isNotBlank()) promptPreview(prompt) else getString(R.string.pref_system_prompt_summary)
 
         // Versione
@@ -460,5 +454,48 @@ Applica i seguenti principi psicologici nel rispondere:
         val singleLine = prompt.replace("\n", " ").trim()
         val max = 60
         return if (singleLine.length <= max) singleLine else singleLine.take(max).trimEnd() + "…"
+    }
+
+    private fun showGatewayKeyDialog() {
+        val title = getString(R.string.pref_gateway_api_key_title)
+        val currentValue = SecurePreferences.getApiKey(this, "")
+
+        val inputLayout = TextInputLayout(this).apply {
+            hint = title
+            boxBackgroundMode = 1
+        }
+
+        val input = TextInputEditText(inputLayout.context).apply {
+            setText(currentValue)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+
+        inputLayout.addView(input)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setView(inputLayout)
+            .setPositiveButton(R.string.settings_save) { _, _ ->
+                val newValue = input.text?.toString()?.trim().orEmpty()
+                if (newValue.isBlank()) {
+                    SecurePreferences.clearApiKey(this)
+                } else {
+                    SecurePreferences.saveApiKey(this, newValue)
+                }
+                loadSettings()
+                Toast.makeText(this, "Salvato: $title", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun migrateGatewayApiKeyToSecureIfNeeded() {
+        val legacy = prefs.getString(Constants.Prefs.GATEWAY_API_KEY, null)?.trim().orEmpty()
+        if (legacy.isNotBlank() && !SecurePreferences.hasApiKey(this)) {
+            SecurePreferences.saveApiKey(this, legacy)
+        }
+        if (legacy.isNotBlank()) {
+            prefs.edit().remove(Constants.Prefs.GATEWAY_API_KEY).apply()
+        }
     }
 }

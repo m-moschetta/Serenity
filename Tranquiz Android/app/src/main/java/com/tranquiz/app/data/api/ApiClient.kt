@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.tranquiz.app.BuildConfig
 import com.tranquiz.app.R
 import com.tranquiz.app.data.model.AIProvider
+import com.tranquiz.app.data.preferences.SecurePreferences
 import com.tranquiz.app.util.Constants
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -24,9 +25,9 @@ object ApiClient {
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(Constants.Api.CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .readTimeout(Constants.Api.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .writeTimeout(Constants.Api.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .build()
 
     private val retrofitInstances = mutableMapOf<String, Pair<Retrofit, ChatApiService>>()
@@ -51,19 +52,19 @@ object ApiClient {
         // Leggi override del modello da SharedPreferences; fallback alle stringhe di default
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
         val defaultModel = when (provider) {
-            AIProvider.OPENAI -> prefs.getString("pref_model_openai", context.getString(R.string.provider_openai_default_model))
-            AIProvider.ANTHROPIC -> prefs.getString("pref_model_anthropic", context.getString(R.string.provider_anthropic_default_model))
-            AIProvider.PERPLEXITY -> prefs.getString("pref_model_perplexity", context.getString(R.string.provider_perplexity_default_model))
-            AIProvider.GROQ -> prefs.getString("pref_model_groq", context.getString(R.string.provider_groq_default_model))
+            AIProvider.OPENAI -> prefs.getString(Constants.Prefs.MODEL_OPENAI, context.getString(R.string.provider_openai_default_model))
+            AIProvider.ANTHROPIC -> prefs.getString(Constants.Prefs.MODEL_ANTHROPIC, context.getString(R.string.provider_anthropic_default_model))
+            AIProvider.PERPLEXITY -> prefs.getString(Constants.Prefs.MODEL_PERPLEXITY, context.getString(R.string.provider_perplexity_default_model))
+            AIProvider.GROQ -> prefs.getString(Constants.Prefs.MODEL_GROQ, context.getString(R.string.provider_groq_default_model))
         } ?: context.getString(R.string.provider_openai_default_model)
 
-        val gatewayKey = context.getString(R.string.gateway_api_key)
+        val gatewayKey = SecurePreferences.getApiKey(context, "")
         return com.tranquiz.app.data.model.ProviderConfig(provider, gatewayKey, defaultModel)
     }
 
     fun getCurrentProvider(context: Context): AIProvider {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
-        val providerPref = prefs.getString("pref_current_provider", context.getString(R.string.current_provider))
+        val providerPref = prefs.getString(Constants.Prefs.CURRENT_PROVIDER, context.getString(R.string.current_provider))
         val providerName = (providerPref ?: context.getString(R.string.current_provider)).uppercase()
         return try {
             AIProvider.valueOf(providerName)
@@ -75,7 +76,7 @@ object ApiClient {
     fun getGatewayBaseUrl(context: Context): String {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
         val defaultUrl = context.getString(R.string.gateway_base_url)
-        return prefs.getString("pref_gateway_base_url", defaultUrl) ?: defaultUrl
+        return prefs.getString(Constants.Prefs.GATEWAY_BASE_URL, defaultUrl) ?: defaultUrl
     }
 
     private fun isPlaceholderToken(token: String): Boolean {
@@ -85,8 +86,15 @@ object ApiClient {
 
     fun getGatewayHeaders(context: Context, provider: AIProvider? = null): Map<String, String> {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
-        val configuredToken = prefs.getString("pref_gateway_api_key", context.getString(R.string.gateway_api_key))
-        val apiKey = configuredToken ?: ""
+        var apiKey = SecurePreferences.getApiKey(context, "")
+        if (apiKey.isBlank()) {
+            val legacy = prefs.getString(Constants.Prefs.GATEWAY_API_KEY, null)?.trim().orEmpty()
+            if (legacy.isNotBlank()) {
+                SecurePreferences.saveApiKey(context, legacy)
+                prefs.edit().remove(Constants.Prefs.GATEWAY_API_KEY).apply()
+                apiKey = legacy
+            }
+        }
         val headers = mutableMapOf<String, String>()
         headers["Accept"] = "application/json"
         if (apiKey.isNotEmpty() && !isPlaceholderToken(apiKey)) {
@@ -100,7 +108,7 @@ object ApiClient {
 
     fun getSystemPrompt(context: Context): String {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
-        val customPrompt = prefs.getString("pref_system_prompt", null)?.trim().orEmpty()
+        val customPrompt = prefs.getString(Constants.Prefs.SYSTEM_PROMPT, null)?.trim().orEmpty()
         val base = if (customPrompt.isNotBlank()) customPrompt else ApiConstants.SYSTEM_PROMPT
 
         // Build tone instructions
@@ -121,7 +129,7 @@ object ApiClient {
             else "\n\nContesto utente:\n" + contextParts.joinToString("\n")
 
         val finalPrompt = base + "\n\n" + toneInstructions + contextSection
-        android.util.Log.d("ApiClient", "System Prompt Length: ${finalPrompt.length}")
+        android.util.Log.d(Constants.Tags.API_CLIENT, "System Prompt Length: ${finalPrompt.length}")
         return finalPrompt
     }
 

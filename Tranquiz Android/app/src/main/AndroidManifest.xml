@@ -37,13 +37,7 @@
             android:name=".ui.SafetyActivity"
             android:exported="false"
             android:theme="@style/Theme.Tranquiz" />
-        
-        <activity
-            android:name=".ui.ProfileActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Tranquiz"
-            android:parentActivityName=".ui.MainActivity" />
-        
+                
     </application>
 
 </manifest>
