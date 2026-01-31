@@ -23,7 +23,7 @@ data class ChatRequest(
     @SerializedName("max_tokens")
     val maxTokens: Int = 1000,
     @SerializedName("temperature")
-    val temperature: Double = 0.7,
+    val temperature: Double? = 0.7,
     @SerializedName("stream")
     val stream: Boolean = false,
     @SerializedName("provider")
@@ -57,6 +57,8 @@ data class Choice(
     val index: Int,
     @SerializedName("message")
     val message: ChatMessage,
+    @SerializedName("text")
+    val text: String? = null,
     @SerializedName("finish_reason")
     val finishReason: String?
 )

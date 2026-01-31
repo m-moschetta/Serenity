@@ -2,7 +2,9 @@ package com.tranquiz.app.data.repository
 
 import android.content.Context
 import android.util.Log
+import androidx.preference.PreferenceManager
 import androidx.lifecycle.LiveData
+import com.google.gson.GsonBuilder
 import com.tranquiz.app.BuildConfig
 import com.tranquiz.app.R
 import com.tranquiz.app.data.api.ApiClient
@@ -21,6 +23,7 @@ class ChatRepository(
 
     companion object {
         private const val TAG = Constants.Tags.CHAT_REPOSITORY
+        private val gson = GsonBuilder().disableHtmlEscaping().create()
     }
 
     fun getMessages(conversationId: Long): LiveData<List<Message>> {
@@ -55,6 +58,7 @@ class ChatRepository(
                 val shouldBlock = performSafetyCheck(
                     apiService = apiService,
                     headers = headers,
+                    provider = selectedProvider,
                     model = providerConfig.defaultModel,
                     conversationalMessages = conversationalMessages
                 )
@@ -72,18 +76,44 @@ class ChatRepository(
                     model = providerConfig.defaultModel,
                     messages = apiMessages,
                     maxTokens = Constants.Api.DEFAULT_MAX_TOKENS,
-                    temperature = Constants.Api.DEFAULT_TEMPERATURE.toDouble(),
+                    temperature = resolveTemperature(
+                        provider = selectedProvider,
+                        model = providerConfig.defaultModel,
+                        desired = Constants.Api.DEFAULT_TEMPERATURE.toString().toDouble()
+                    ),
                     stream = false
                 )
 
                 val response = apiService.sendMessage(headers, request)
+                val (finalRequest, finalResponse, finalErrorDetails) = resolveFinalResponse(
+                    provider = selectedProvider,
+                    initialRequest = request,
+                    initialResponse = response,
+                    send = { req -> apiService.sendMessage(headers, req) }
+                )
+
+                if (isDeveloperModeEnabled()) {
+                    insertDeveloperTrace(
+                        userInput = userMessage,
+                        request = finalRequest,
+                        response = finalResponse.body(),
+                        responseCode = finalResponse.code(),
+                        responseError = finalErrorDetails,
+                        conversationId = conversationId
+                    )
+                }
 
                 when {
-                    response.isSuccessful && response.body() != null -> {
-                        handleSuccessfulResponse(response.body()!!, conversationId)
+                    finalResponse.isSuccessful && finalResponse.body() != null -> {
+                        handleSuccessfulResponse(
+                            response = finalResponse.body()!!,
+                            conversationId = conversationId,
+                            debugUserInput = userMessage,
+                            debugRequest = finalRequest
+                        )
                     }
                     else -> {
-                        val apiError = ApiError.fromHttpCode(response.code(), response.message())
+                        val apiError = ApiError.fromHttpCode(finalResponse.code(), finalErrorDetails.orEmpty())
                         handleApiError(apiError, selectedProvider, conversationId)
                     }
                 }
@@ -120,18 +150,44 @@ class ChatRepository(
                     model = providerConfig.defaultModel,
                     messages = messages,
                     maxTokens = Constants.Api.SAFETY_MAX_TOKENS,
-                    temperature = Constants.Api.DEFAULT_TEMPERATURE.toDouble(),
+                    temperature = resolveTemperature(
+                        provider = selectedProvider,
+                        model = providerConfig.defaultModel,
+                        desired = Constants.Api.DEFAULT_TEMPERATURE.toString().toDouble()
+                    ),
                     stream = false
                 )
 
                 val response = apiService.sendMessage(headers, request)
+                val (finalRequest, finalResponse, finalErrorDetails) = resolveFinalResponse(
+                    provider = selectedProvider,
+                    initialRequest = request,
+                    initialResponse = response,
+                    send = { req -> apiService.sendMessage(headers, req) }
+                )
+
+                if (isDeveloperModeEnabled()) {
+                    insertDeveloperTrace(
+                        userInput = messages.lastOrNull()?.content,
+                        request = finalRequest,
+                        response = finalResponse.body(),
+                        responseCode = finalResponse.code(),
+                        responseError = finalErrorDetails,
+                        conversationId = conversationId
+                    )
+                }
 
                 when {
-                    response.isSuccessful && response.body() != null -> {
-                        handleSuccessfulResponse(response.body()!!, conversationId)
+                    finalResponse.isSuccessful && finalResponse.body() != null -> {
+                        handleSuccessfulResponse(
+                            response = finalResponse.body()!!,
+                            conversationId = conversationId,
+                            debugUserInput = messages.lastOrNull()?.content,
+                            debugRequest = finalRequest
+                        )
                     }
                     else -> {
-                        val apiError = ApiError.fromHttpCode(response.code(), response.message())
+                        val apiError = ApiError.fromHttpCode(finalResponse.code(), finalErrorDetails.orEmpty())
                         handleApiError(apiError, selectedProvider, conversationId)
                     }
                 }
@@ -158,6 +214,7 @@ class ChatRepository(
     private suspend fun performSafetyCheck(
         apiService: ChatApiService,
         headers: Map<String, String>,
+        provider: AIProvider,
         model: String,
         conversationalMessages: List<ChatMessage>
     ): Boolean {
@@ -170,20 +227,34 @@ class ChatRepository(
                 model = model,
                 messages = safetyMessages,
                 maxTokens = 8,
-                temperature = Constants.Api.SAFETY_TEMPERATURE.toDouble(),
+                temperature = resolveTemperature(
+                    provider = provider,
+                    model = model,
+                    desired = Constants.Api.SAFETY_TEMPERATURE.toString().toDouble()
+                ),
                 stream = false
             )
 
             val response = apiService.sendMessage(headers, request)
-            if (!response.isSuccessful || response.body() == null) return false
-
-            val content = response.body()!!.choices.firstOrNull()?.message?.content?.trim()
+            val finalResponse = if (!response.isSuccessful && provider == AIProvider.OPENAI && response.code() == 400) {
+                val details = safeErrorBody(response)
+                if (isTemperatureUnsupported(details)) {
+                    apiService.sendMessage(headers, request.copy(temperature = null))
+                } else {
+                    response
+                }
+            } else {
+                response
+            }
+            if (!finalResponse.isSuccessful || finalResponse.body() == null) return false
+            val content = finalResponse.body()!!.choices.firstOrNull()?.message?.content?.trim()
             content.equals(Constants.Safety.BLOCK_RESPONSE, ignoreCase = true)
         } catch (e: Exception) {
             logDebug("performSafetyCheck", "Safety check failed: ${e.message}")
             false
         }
     }
+
 
     private suspend fun handleConversationBlocked(conversationId: Long): Result<String> {
         val blockMessage = context.getString(R.string.safety_block_message)
@@ -199,9 +270,13 @@ class ChatRepository(
 
     private suspend fun handleSuccessfulResponse(
         response: ChatResponse,
-        conversationId: Long
+        conversationId: Long,
+        debugUserInput: String? = null,
+        debugRequest: ChatRequest? = null
     ): Result<String> {
-        val aiMessage = response.choices.firstOrNull()?.message?.content
+        val firstChoice = response.choices.firstOrNull()
+        val aiMessage = firstChoice?.message?.content?.takeIf { it.isNotBlank() }
+            ?: firstChoice?.text?.takeIf { it.isNotBlank() }
 
         return if (!aiMessage.isNullOrBlank()) {
             messageDao.insertMessage(
@@ -214,8 +289,25 @@ class ChatRepository(
             Result.success(aiMessage)
         } else {
             val error = ApiError.EmptyResponse
-            insertErrorMessage(error.getUserMessage(context), conversationId)
-            Result.failure(Exception(error.getUserMessage(context)))
+            val isDeveloperMode = PreferenceManager
+                .getDefaultSharedPreferences(context)
+                .getBoolean(Constants.Prefs.DEVELOPER_MODE, false)
+
+            val userMessage = if (BuildConfig.DEBUG || isDeveloperMode) {
+                val requestJson = debugRequest?.let { runCatching { gson.toJson(it) }.getOrNull() }
+                val responseJson = runCatching { gson.toJson(response) }.getOrNull()
+
+                buildString {
+                    append("Risposta vuota dal server\n")
+                    append("User: ").append(debugUserInput ?: "(n/a)").append("\n")
+                    append("Request: ").append(requestJson ?: "(n/a)").append("\n")
+                    append("Response: ").append(responseJson ?: "(n/a)")
+                }
+            } else {
+                error.getUserMessage(context)
+            }
+            insertErrorMessage(userMessage, conversationId)
+            Result.failure(Exception(userMessage))
         }
     }
 
@@ -258,6 +350,85 @@ class ChatRepository(
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "$method: $message")
         }
+    }
+
+    private fun safeErrorBody(response: retrofit2.Response<*>): String {
+        val msg = response.message().orEmpty()
+        val body = try { response.errorBody()?.string().orEmpty() } catch (_: Exception) { "" }
+        return listOf(msg, body).filter { it.isNotBlank() }.joinToString("\n")
+    }
+
+    private fun resolveTemperature(provider: AIProvider, model: String, desired: Double): Double? {
+        if (provider != AIProvider.OPENAI) return desired
+        val m = model.lowercase().trim()
+        val supportsCustomTemperature = !(m.startsWith("o1") || m.startsWith("o3"))
+        return if (supportsCustomTemperature) desired else null
+    }
+
+    private fun isTemperatureUnsupported(details: String): Boolean {
+        val d = details.lowercase()
+        return d.contains("\"param\":\"temperature\"") ||
+            (d.contains("temperature") && d.contains("only the default (1) value is supported"))
+    }
+
+    private fun isDeveloperModeEnabled(): Boolean {
+        return PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .getBoolean(Constants.Prefs.DEVELOPER_MODE, false)
+    }
+
+    private suspend fun insertDeveloperTrace(
+        userInput: String?,
+        request: ChatRequest,
+        response: ChatResponse?,
+        responseCode: Int,
+        responseError: String?,
+        conversationId: Long
+    ) {
+        val requestJson = runCatching { gson.toJson(request) }.getOrNull()
+        val responseBodyJson = response?.let { runCatching { gson.toJson(it) }.getOrNull() }
+
+        val content = buildString {
+            append("DEV TRACE\n")
+            append("User: ").append(userInput ?: "(n/a)").append("\n")
+            append("Request: ").append(requestJson ?: "(n/a)").append("\n")
+            append("HTTP: ").append(responseCode).append("\n")
+            append("Response: ").append(responseBodyJson ?: responseError ?: "(n/a)")
+        }.truncateForChat(12000)
+
+        messageDao.insertMessage(
+            Message(
+                content = content,
+                isFromUser = false,
+                isError = true,
+                conversationId = conversationId
+            )
+        )
+    }
+
+    private fun String.truncateForChat(maxLen: Int): String {
+        return if (length <= maxLen) this else take(maxLen) + "\n…(troncato)"
+    }
+
+    private suspend fun resolveFinalResponse(
+        provider: AIProvider,
+        initialRequest: ChatRequest,
+        initialResponse: retrofit2.Response<ChatResponse>,
+        send: suspend (ChatRequest) -> retrofit2.Response<ChatResponse>
+    ): Triple<ChatRequest, retrofit2.Response<ChatResponse>, String?> {
+        if (provider == AIProvider.OPENAI && !initialResponse.isSuccessful && initialResponse.code() == 400) {
+            val details = safeErrorBody(initialResponse)
+            if (isTemperatureUnsupported(details)) {
+                val retryRequest = initialRequest.copy(temperature = null)
+                val retryResponse = send(retryRequest)
+                val retryDetails = if (retryResponse.isSuccessful) null else safeErrorBody(retryResponse).takeIf { it.isNotBlank() }
+                return Triple(retryRequest, retryResponse, retryDetails)
+            }
+            return Triple(initialRequest, initialResponse, details.takeIf { it.isNotBlank() })
+        }
+
+        val details = if (initialResponse.isSuccessful) null else safeErrorBody(initialResponse).takeIf { it.isNotBlank() }
+        return Triple(initialRequest, initialResponse, details)
     }
 
     suspend fun clearConversation(conversationId: Long = Constants.Conversation.DEFAULT_CONVERSATION_ID) {
