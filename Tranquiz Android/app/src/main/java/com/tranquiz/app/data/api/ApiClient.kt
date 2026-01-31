@@ -118,11 +118,13 @@ object ApiClient {
         val name = prefs.getString(Constants.Prefs.ONBOARDING_NAME, null)?.trim().orEmpty()
         val feeling = prefs.getString(Constants.Prefs.ONBOARDING_FEELING, null)?.trim().orEmpty()
         val goal = prefs.getString(Constants.Prefs.ONBOARDING_GOAL, null)?.trim().orEmpty()
+        val onboardingSummary = prefs.getString(Constants.Prefs.ONBOARDING_PROFILE_SUMMARY, null)?.trim().orEmpty()
 
         val contextParts = buildList {
             if (name.isNotBlank()) add("Nome: $name")
             if (feeling.isNotBlank()) add("Oggi si sente: $feeling")
             if (goal.isNotBlank()) add("Obiettivo: $goal")
+            if (onboardingSummary.isNotBlank()) add(onboardingSummary)
         }
 
         val contextSection = if (contextParts.isEmpty()) ""

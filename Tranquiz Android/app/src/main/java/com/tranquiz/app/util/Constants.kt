@@ -14,6 +14,8 @@ object Constants {
         const val ONBOARDING_NAME = "pref_onboarding_name"
         const val ONBOARDING_FEELING = "pref_onboarding_feeling"
         const val ONBOARDING_GOAL = "pref_onboarding_goal"
+        const val ONBOARDING_PROFILE_SUMMARY = "pref_onboarding_profile_summary"
+        const val ONBOARDING_SAFETY_FLAG = "pref_onboarding_safety_flag"
 
         // Provider e modelli
         const val CURRENT_PROVIDER = "pref_current_provider"
