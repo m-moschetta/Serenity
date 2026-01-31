@@ -8,6 +8,11 @@ import com.tranquiz.app.ui.onboarding.model.OnboardingReason
 object OnboardingFlowLibrary {
     val commonQuestions = listOf(
         OnboardingQuestion(
+            id = "q0_name",
+            title = "Come ti chiami? (opzionale)",
+            kind = OnboardingQuestionKind.FreeText(placeholder = "Nome (opzionale)")
+        ),
+        OnboardingQuestion(
             id = "q0_gender",
             title = "Qual è il tuo genere?",
             kind = OnboardingQuestionKind.SingleChoice,
