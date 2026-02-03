@@ -18,6 +18,7 @@ final class KeychainService {
     private let mistralAccount = "apiKey"
     private let groqService = "Serenity.Groq"
     private let groqAccount = "apiKey"
+    private let emergencyContactService = "Serenity.EmergencyContact"
 
     var apiKey: String? {
         get { try? read() }
@@ -51,7 +52,18 @@ final class KeychainService {
             }
         }
     }
-    
+
+    var emergencyContactEmail: String? {
+        get { try? read(service: emergencyContactService, account: "email") }
+        set {
+            if let newValue = newValue {
+                _ = try? save(newValue, service: emergencyContactService, account: "email")
+            } else {
+                _ = try? delete(service: emergencyContactService, account: "email")
+            }
+        }
+    }
+
     func save(_ value: String, service: String? = nil, account: String? = nil) throws {
         let data = Data(value.utf8)
         let query: [String: Any] = [

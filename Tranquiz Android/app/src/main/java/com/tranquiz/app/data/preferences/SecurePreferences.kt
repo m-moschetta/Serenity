@@ -15,6 +15,7 @@ object SecurePreferences {
 
     // Chiavi per i dati sensibili
     const val KEY_GATEWAY_API_KEY = "secure_gateway_api_key"
+    private const val KEY_EMERGENCY_CONTACT_EMAIL = "secure_emergency_contact_email"
 
     @Volatile
     private var encryptedPrefs: SharedPreferences? = null
@@ -79,5 +80,39 @@ object SecurePreferences {
             .edit()
             .remove(KEY_GATEWAY_API_KEY)
             .apply()
+    }
+
+    // Emergency Contact Methods
+
+    /**
+     * Salva l'email del contatto di emergenza in modo sicuro.
+     */
+    fun saveEmergencyContactEmail(context: Context, email: String?) {
+        if (email != null) {
+            getEncryptedPrefs(context)
+                .edit()
+                .putString(KEY_EMERGENCY_CONTACT_EMAIL, email)
+                .apply()
+        } else {
+            getEncryptedPrefs(context)
+                .edit()
+                .remove(KEY_EMERGENCY_CONTACT_EMAIL)
+                .apply()
+        }
+    }
+
+    /**
+     * Recupera l'email del contatto di emergenza.
+     */
+    fun getEmergencyContactEmail(context: Context): String? {
+        return getEncryptedPrefs(context)
+            .getString(KEY_EMERGENCY_CONTACT_EMAIL, null)
+    }
+
+    /**
+     * Verifica se esiste un contatto di emergenza salvato.
+     */
+    fun hasEmergencyContactEmail(context: Context): Boolean {
+        return getEncryptedPrefs(context).contains(KEY_EMERGENCY_CONTACT_EMAIL)
     }
 }

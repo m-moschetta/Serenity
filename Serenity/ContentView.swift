@@ -31,14 +31,23 @@ struct ContentView: View {
             }
             .tag(0)
 
-            // Tab 2: Profilo
+            // Tab 2: Overview
+            NavigationStack {
+                OverviewView()
+            }
+            .tabItem {
+                Label("Overview", systemImage: "chart.line.uptrend.xyaxis")
+            }
+            .tag(1)
+
+            // Tab 3: Profilo
             NavigationStack {
                 ProfileView()
             }
             .tabItem {
                 Label("Profilo", systemImage: "person.crop.circle.fill")
             }
-            .tag(1)
+            .tag(2)
         }
         .tint(ChatStyle.accentPurpleDark)
         .preferredColorScheme(appearance)

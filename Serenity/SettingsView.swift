@@ -14,6 +14,8 @@ struct SettingsView: View {
     @State private var saved = false
     @State private var mistralKey: String = KeychainService.shared.mistralApiKey ?? ""
     @State private var groqKey: String = KeychainService.shared.groqApiKey ?? ""
+    @State private var emergencyEmail: String = ""
+    @State private var showEmergencyEmailField = false
     @AppStorage("developerMode") private var developerMode: Bool = false
     @State private var devTapCount: Int = 0
     @State private var showDevUnlockedAlert: Bool = false
@@ -91,6 +93,26 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
     @AppStorage("enableMultimodal") private var enableMultimodal: Bool = true
     @AppStorage("chatTemperature") private var chatTemperature: Double = 0.4
     @AppStorage("summaryPrompt") private var summaryPrompt: String = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
+    @AppStorage("overviewReportPrompt") private var overviewReportPrompt: String = """
+Sei un assistente clinico che produce un report sintetico per lo psicologo, basato solo su dati aggregati e de-identificati.
+Non includere trascrizioni complete, nomi, luoghi specifici o dettagli identificativi.
+
+Obiettivo: fornire due cose in modo chiaro e utile:
+1) Contesto tecnico d'uso (come, quando, quanto usa il chatbot)
+2) Indici sintetici di contenuto ed emozioni che emergono
+
+Requisiti di output:
+- Report in italiano, professionale e conciso.
+- Sezioni obbligatorie: Uso, Emozioni, Temi, Interventi, Sicurezza.
+- Evidenzia trend, cambiamenti rispetto alla baseline e segnali di rischio.
+- Evita ipotesi cliniche o diagnosi.
+- Se i dati sono insufficienti, dichiaralo esplicitamente.
+"""
+    @AppStorage("overviewReportModelOpenAI") private var overviewReportModelOpenAI: String = ""
+    @AppStorage("overviewReportModelMistral") private var overviewReportModelMistral: String = ""
+    @AppStorage("overviewReportModelGroq") private var overviewReportModelGroq: String = ""
+    @AppStorage("overviewReportTemperature") private var overviewReportTemperature: Double = 0.2
+    @AppStorage("overviewReportMaxTokens") private var overviewReportMaxTokens: Int = 900
     @State private var promptTapCount = 0
     @State private var showPromptEditor = false
     @State private var showingDiagAlert = false
@@ -132,6 +154,11 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
 
                 NotificationSettingsSection()
 
+                EmergencyContactSection(
+                    emergencyEmail: $emergencyEmail,
+                    showEmailField: $showEmergencyEmailField
+                )
+
                 Section("Aspetto") {
                     Picker("Tema", selection: $preferredAppearance) {
                         Text("Sistema").tag("system")
@@ -155,6 +182,31 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             Text("Più bassa = più deterministico, più alta = più creativo.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Section("Report overview") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Temperatura report")
+                                Spacer()
+                                Text(String(format: "%.2f", overviewReportTemperature))
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $overviewReportTemperature, in: 0...1, step: 0.05)
+                            Text("Piu bassa = piu deterministico.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Text("Max token report")
+                            Spacer()
+                            Stepper(value: $overviewReportMaxTokens, in: 200...2000, step: 50) {
+                                Text("\(overviewReportMaxTokens)")
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
 
@@ -272,6 +324,14 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .foregroundStyle(.primary)
+                            Picker("Modello report overview", selection: $overviewReportModelOpenAI) {
+                                Text("Usa modello chat").tag("")
+                                ForEach(catalog.openaiModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            TextField("Modello report personalizzato", text: $overviewReportModelOpenAI)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(.primary)
                         } else if aiProvider == "mistral" {
                             Picker("Modello", selection: $mistralModel) {
                                 ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
@@ -305,6 +365,14 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .foregroundStyle(.primary)
+                            Picker("Modello report overview", selection: $overviewReportModelMistral) {
+                                Text("Usa modello chat").tag("")
+                                ForEach(catalog.mistralModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            TextField("Modello report personalizzato", text: $overviewReportModelMistral)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(.primary)
                         } else if aiProvider == "groq" {
                             Picker("Modello", selection: $groqModel) {
                                 ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
@@ -318,6 +386,14 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                                 Spacer()
                             }
                             TextField("Modello personalizzato", text: $groqModel)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .foregroundStyle(.primary)
+                            Picker("Modello report overview", selection: $overviewReportModelGroq) {
+                                Text("Usa modello chat").tag("")
+                                ForEach(catalog.groqModels, id: \.self) { id in Text(id).tag(id) }
+                            }
+                            TextField("Modello report personalizzato", text: $overviewReportModelGroq)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .foregroundStyle(.primary)
@@ -339,6 +415,8 @@ Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano im
                             TextEditor(text: $systemPrompt).frame(minHeight: 120).foregroundStyle(.primary)
                             Text("Prompt riassunto")
                             TextEditor(text: $summaryPrompt).frame(minHeight: 120).foregroundStyle(.primary)
+                            Text("Prompt report overview")
+                            TextEditor(text: $overviewReportPrompt).frame(minHeight: 120).foregroundStyle(.primary)
                             HStack {
                                 Button("Reset") {
                                     systemPrompt = """
@@ -403,6 +481,21 @@ Ti va di dirmi quando è iniziato questo senso di distanza dagli altri?”
 Nota: in caso di rischio o emergenza, interrompi e indirizza a contatto umano immediato, come sopra.
 """
                                     summaryPrompt = "Crea un riassunto strutturato e conciso della conversazione. Struttura obbligatoria: \n# Sintesi \n- punti chiave (3-6) \n# Stati Emotivi \n- osservazioni principali \n# Strategie Discusse \n- tecniche, esercizi, compiti \n# Prossimi Passi \n- azioni concrete per la prossima settimana. \nMantieni un tono professionale ed empatico. Conversazione:"
+                                    overviewReportPrompt = """
+Sei un assistente clinico che produce un report sintetico per lo psicologo, basato solo su dati aggregati e de-identificati.
+Non includere trascrizioni complete, nomi, luoghi specifici o dettagli identificativi.
+
+Obiettivo: fornire due cose in modo chiaro e utile:
+1) Contesto tecnico d'uso (come, quando, quanto usa il chatbot)
+2) Indici sintetici di contenuto ed emozioni che emergono
+
+Requisiti di output:
+- Report in italiano, professionale e conciso.
+- Sezioni obbligatorie: Uso, Emozioni, Temi, Interventi, Sicurezza.
+- Evidenzia trend, cambiamenti rispetto alla baseline e segnali di rischio.
+- Evita ipotesi cliniche o diagnosi.
+- Se i dati sono insufficienti, dichiaralo esplicitamente.
+"""
                                 }
                                 Spacer()
                             }
@@ -577,5 +670,102 @@ private struct TonePickerRow<T: Hashable & CaseIterable>: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+// MARK: - Emergency Contact Section
+
+private struct EmergencyContactSection: View {
+    @Binding var emergencyEmail: String
+    @Binding var showEmailField: Bool
+    @State private var showDeleteConfirmation = false
+
+    var body: some View {
+        Section(header: Text("Contatto di Emergenza")) {
+            if let currentEmail = KeychainService.shared.emergencyContactEmail {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "envelope.fill")
+                            .foregroundColor(.orange)
+                        Text(currentEmail)
+                            .foregroundColor(.primary)
+                        Spacer()
+                    }
+
+                    Text("Riceverà una notifica automatica in caso di segnali di crisi (max 1 volta ogni 24h)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Rimuovi Contatto", systemImage: "trash")
+                }
+                .confirmationDialog(
+                    "Sei sicuro di voler rimuovere il contatto di emergenza?",
+                    isPresented: $showDeleteConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Rimuovi", role: .destructive) {
+                        KeychainService.shared.emergencyContactEmail = nil
+                    }
+                    Button("Annulla", role: .cancel) {}
+                }
+            } else {
+                if showEmailField {
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("Email contatto emergenza", text: $emergencyEmail)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textFieldStyle(.roundedBorder)
+
+                        HStack(spacing: 12) {
+                            Button("Annulla") {
+                                showEmailField = false
+                                emergencyEmail = ""
+                            }
+                            .buttonStyle(.bordered)
+
+                            Button("Salva") {
+                                saveEmergencyContact()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!isValidEmail(emergencyEmail))
+                        }
+                    }
+                } else {
+                    Button {
+                        showEmailField = true
+                    } label: {
+                        Label("Aggiungi Contatto di Emergenza", systemImage: "person.badge.plus")
+                    }
+
+                    Text("Verrà avvisato automaticamente se vengono rilevati segnali di crisi")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Text("🔒 Le conversazioni rimangono sempre private sul dispositivo")
+                .font(.caption)
+                .foregroundColor(.orange)
+        }
+    }
+
+    private func saveEmergencyContact() {
+        let trimmed = emergencyEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty && isValidEmail(trimmed) {
+            KeychainService.shared.emergencyContactEmail = trimmed
+            emergencyEmail = ""
+            showEmailField = false
+        }
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
     }
 }

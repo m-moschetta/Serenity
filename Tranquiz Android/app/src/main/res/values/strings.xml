@@ -134,6 +134,15 @@
     <string name="pref_system_prompt_title">Prompt di sistema</string>
     <string name="pref_system_prompt_summary">Personalizza il comportamento di Tranquiz</string>
 
+    <string name="pref_emergency_contact_title">Contatto di emergenza</string>
+    <string name="pref_emergency_contact_email_title">Email contatto emergenza</string>
+    <string name="pref_emergency_contact_email_summary">Aggiungi un contatto per notifiche in caso di crisi (max 1 ogni 24h)</string>
+    <string name="pref_emergency_contact_remove_title">Rimuovi contatto</string>
+    <string name="pref_emergency_contact_remove_summary">Elimina l’email di emergenza salvata</string>
+    <string name="pref_emergency_contact_saved">Contatto di emergenza salvato</string>
+    <string name="pref_emergency_contact_removed">Contatto di emergenza rimosso</string>
+    <string name="pref_emergency_contact_invalid">Email non valida</string>
+
     <string name="onboarding_name_title">Come ti chiami?</string>
     <string name="onboarding_name_hint">Nome (opzionale)</string>
     <string name="onboarding_feeling_title">Come ti senti oggi?</string>

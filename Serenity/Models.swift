@@ -97,6 +97,44 @@ final class Conversation {
     }
 }
 
+@Model
+final class OverviewReportLog {
+    var id: UUID
+    var createdAt: Date
+    var provider: String
+    var model: String
+    var temperature: Double
+    var maxTokens: Int
+    var prompt: String
+    var payload: String
+    var response: String
+    var outputFormat: String
+
+    init(
+        id: UUID = UUID(),
+        createdAt: Date = .now,
+        provider: String,
+        model: String,
+        temperature: Double,
+        maxTokens: Int,
+        prompt: String,
+        payload: String,
+        response: String,
+        outputFormat: String
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.provider = provider
+        self.model = model
+        self.temperature = temperature
+        self.maxTokens = maxTokens
+        self.prompt = prompt
+        self.payload = payload
+        self.response = response
+        self.outputFormat = outputFormat
+    }
+}
+
 // Helper per ottenere un ModelContext condiviso fuori dall'albero SwiftUI
 enum ModelContextContainer {
     static func sharedContext() throws -> ModelContext {
@@ -105,6 +143,7 @@ enum ModelContextContainer {
             ChatMessage.self,
             MemorySummary.self,
             Attachment.self,
+            OverviewReportLog.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         return try ModelContainer(for: schema, configurations: [modelConfiguration]).mainContext

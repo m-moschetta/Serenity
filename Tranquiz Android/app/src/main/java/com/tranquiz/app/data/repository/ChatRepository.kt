@@ -11,7 +11,9 @@ import com.tranquiz.app.data.api.ApiClient
 import com.tranquiz.app.data.api.ChatApiService
 import com.tranquiz.app.data.database.MessageDao
 import com.tranquiz.app.data.model.*
+import com.tranquiz.app.data.preferences.SecurePreferences
 import com.tranquiz.app.data.therapeutic.SafetyClassifierPrompt
+import com.tranquiz.app.util.CrisisEmailTracker
 import com.tranquiz.app.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -265,7 +267,50 @@ class ChatRepository(
                 conversationId = conversationId
             )
         )
+
+        // Send emergency email if configured
+        sendEmergencyEmailIfNeeded()
+
         return Result.failure(Exception(Constants.Safety.CONVERSATION_BLOCKED_MARKER))
+    }
+
+    /**
+     * Sends emergency email if configured and rate limit allows
+     * Fails silently to avoid interrupting crisis flow
+     */
+    private suspend fun sendEmergencyEmailIfNeeded() {
+        try {
+            // Check if emergency contact is configured
+            val emergencyEmail = SecurePreferences.getEmergencyContactEmail(context)
+                ?: return
+
+            // Check rate limiting
+            if (!CrisisEmailTracker.canSendEmail(context)) {
+                logDebug("sendEmergencyEmailIfNeeded", "Crisis email already sent in last 24h")
+                return
+            }
+
+            // Get user name with fallback
+            val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            val userName = prefs.getString(Constants.Prefs.ONBOARDING_NAME, "la persona che stai seguendo")
+                ?: "la persona che stai seguendo"
+
+            // Send email via worker
+            val result = com.tranquiz.app.data.api.EmergencyEmailService.sendCrisisAlert(
+                toEmail = emergencyEmail,
+                userName = userName
+            )
+
+            if (result.isSuccess) {
+                CrisisEmailTracker.recordEmailSent(context)
+                logDebug("sendEmergencyEmailIfNeeded", "Emergency contact notified successfully: $emergencyEmail")
+            } else {
+                logDebug("sendEmergencyEmailIfNeeded", "Failed to send emergency email: ${result.exceptionOrNull()?.message}")
+            }
+        } catch (e: Exception) {
+            logDebug("sendEmergencyEmailIfNeeded", "Error sending emergency email: ${e.message}")
+            // Fail silently - don't interrupt crisis flow
+        }
     }
 
     private suspend fun handleSuccessfulResponse(

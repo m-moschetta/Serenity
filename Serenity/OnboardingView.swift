@@ -25,6 +25,14 @@ struct OnboardingView: View {
     @State private var showSafetySheet = false
     @State private var showCrisisOverlay = false
 
+    // Name collection step
+    @State private var showingNameStep = true
+    @State private var userName: String = ""
+
+    // Emergency contact step
+    @State private var showingEmergencyContactStep = false
+    @State private var emergencyEmail: String = ""
+
     // Tone preferences step
     @State private var showingToneStep = false
     @State private var toneEmpathy: ToneEmpathy = .empathetic
@@ -49,7 +57,13 @@ struct OnboardingView: View {
                 let isCompactHeight = proxy.size.height < 750
                 ScrollView {
                     VStack(spacing: 14) {
-                        if showingNotificationsStep {
+                        if showingNameStep {
+                            nameStepContent
+                                .padding(.bottom, 4)
+                        } else if showingEmergencyContactStep {
+                            emergencyContactStepContent
+                                .padding(.bottom, 4)
+                        } else if showingNotificationsStep {
                             notificationsStepHeader
                                 .padding(.bottom, 4)
                             NotificationsSetupCard(
@@ -94,8 +108,16 @@ struct OnboardingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if showingNotificationsStep {
-                        Button("Indietro") { showingNotificationsStep = false }
+                    if showingEmergencyContactStep {
+                        Button("Indietro") {
+                            showingEmergencyContactStep = false
+                            showingNotificationsStep = true
+                        }
+                    } else if showingNotificationsStep {
+                        Button("Indietro") {
+                            showingNotificationsStep = false
+                            showingToneStep = true
+                        }
                     } else if showingToneStep {
                         Button("Indietro") { showingToneStep = false }
                     } else if currentIndex > 0 {
@@ -105,7 +127,17 @@ struct OnboardingView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            if showingNotificationsStep {
+            if showingNameStep {
+                nameActionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .background(.thinMaterial)
+            } else if showingEmergencyContactStep {
+                emergencyContactActionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .background(.thinMaterial)
+            } else if showingNotificationsStep {
                 notificationsActionBar
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -140,6 +172,128 @@ struct OnboardingView: View {
     }
 
     // MARK: - UI
+
+    private var nameStepContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Come ti chiami?")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text("Questo ci aiuta a personalizzare l'esperienza e verrà usato per contattare il tuo supporto di emergenza se necessario.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            TextField("Il tuo nome (opzionale)", text: $userName)
+                .textFieldStyle(.roundedBorder)
+                .padding(.top, 8)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+    }
+
+    private var nameActionBar: some View {
+        Button(action: proceedFromName) {
+            Text("Continua")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(ChatStyle.accentPurpleDark)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private func proceedFromName() {
+        let trimmed = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        OnboardingStorage.saveUserName(trimmed.isEmpty ? nil : trimmed)
+        withAnimation(.easeInOut) {
+            showingNameStep = false
+            currentIndex = 0
+        }
+    }
+
+    private var emergencyContactStepContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Contatto di Emergenza (Facoltativo)")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text("In caso di segnali di crisi, possiamo avvisare automaticamente una persona di tua fiducia.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            TextField("Email contatto emergenza", text: $emergencyEmail)
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.top, 8)
+
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield.fill")
+                    .foregroundColor(.orange)
+                Text("Le conversazioni non verranno mai inoltrate e rimangono sempre private sul dispositivo. Questa opzione è facoltativa ma consigliata.")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 4)
+    }
+
+    private var emergencyContactActionBar: some View {
+        VStack(spacing: 12) {
+            Button {
+                completeOnboardingWithEmail()
+            } label: {
+                Text("Salva e Completa")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(ChatStyle.accentPurpleDark)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+
+            Button("Salta") {
+                completeOnboardingWithEmail(skipEmail: true)
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+
+            Text("Potrai modificare queste impostazioni in qualsiasi momento dal profilo.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+        }
+    }
+
+    private func completeOnboardingWithEmail(skipEmail: Bool = false) {
+        if !skipEmail {
+            let trimmed = emergencyEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty && isValidEmail(trimmed) {
+                OnboardingStorage.saveEmergencyContact(trimmed)
+            }
+        }
+        finish()
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
+    }
 
     private var toneStepHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -185,8 +339,8 @@ struct OnboardingView: View {
 
     private var notificationsActionBar: some View {
         VStack(spacing: 12) {
-            Button(action: finish) {
-                Text("Inizia")
+            Button(action: goToEmergencyContact) {
+                Text("Avanti")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -200,6 +354,15 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
+        }
+    }
+
+    private func goToEmergencyContact() {
+        // Save notification settings
+        saveNotificationSettings()
+        withAnimation(.easeInOut) {
+            showingNotificationsStep = false
+            showingEmergencyContactStep = true
         }
     }
 
@@ -335,12 +498,11 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        // Save notification settings
-        saveNotificationSettings()
-
         let allAnswers = buildAnswers()
         let profile = OnboardingProfile(
             createdAt: .now,
+            userName: OnboardingStorage.getUserName(),
+            emergencyContactEmail: OnboardingStorage.getEmergencyContact(),
             answers: allAnswers,
             primaryReason: selectedReasons.first,
             otherReasons: Array(selectedReasons.dropFirst()),

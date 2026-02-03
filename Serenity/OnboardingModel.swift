@@ -102,6 +102,8 @@ struct OnboardingAnswer: Codable, Hashable {
 
 struct OnboardingProfile: Codable {
     var createdAt: Date
+    var userName: String?
+    var emergencyContactEmail: String?
     var answers: [OnboardingAnswer]
     var primaryReason: OnboardingReason?
     var otherReasons: [OnboardingReason]
@@ -148,6 +150,7 @@ final class OnboardingStorage {
     private let dataKey = "onboardingProfileData"
     private let completedKey = "onboardingCompleted"
     private let summaryKey = "onboardingSummary"
+    private let userNameKey = "onboardingUserName"
     private let defaults: UserDefaults
 
     private init(defaults: UserDefaults = .standard) {
@@ -191,5 +194,29 @@ final class OnboardingStorage {
 
     var isCompleted: Bool {
         defaults.bool(forKey: completedKey)
+    }
+
+    static func saveUserName(_ name: String?) {
+        if let name = name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            UserDefaults.standard.set(name, forKey: "onboardingUserName")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "onboardingUserName")
+        }
+    }
+
+    static func getUserName() -> String? {
+        UserDefaults.standard.string(forKey: "onboardingUserName")
+    }
+
+    static func saveEmergencyContact(_ email: String?) {
+        if let email = email, !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            KeychainService.shared.emergencyContactEmail = email
+        } else {
+            KeychainService.shared.emergencyContactEmail = nil
+        }
+    }
+
+    static func getEmergencyContact() -> String? {
+        KeychainService.shared.emergencyContactEmail
     }
 }

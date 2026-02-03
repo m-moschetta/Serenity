@@ -546,6 +546,12 @@ Personalizza profondamente il linguaggio; evita formule generiche e toni robotic
                         conversation.messages.remove(at: idx)
                     }
                     try? context.save()
+
+                    // Send emergency email if configured
+                    Task {
+                        await sendEmergencyEmailIfNeeded()
+                    }
+
                     sending = false
                     streaming = false
                     return
@@ -765,6 +771,38 @@ extension SingleChatView {
         return false
     }
 
+    /// Sends emergency email if configured and rate limit allows
+    private func sendEmergencyEmailIfNeeded() async {
+        // Check if emergency contact is configured
+        guard let emergencyEmail = KeychainService.shared.emergencyContactEmail else {
+            print("No emergency contact configured, skipping email")
+            return
+        }
+
+        // Check rate limiting (24h)
+        guard CrisisEmailTracker.shared.canSendEmail() else {
+            print("Crisis email already sent in last 24h, skipping")
+            return
+        }
+
+        // Get user name with fallback
+        let userName = OnboardingStorage.getUserName() ?? "la persona che stai seguendo"
+
+        // Send email via worker
+        do {
+            try await EmergencyEmailService.shared.sendCrisisAlert(
+                to: emergencyEmail,
+                userName: userName
+            )
+            CrisisEmailTracker.shared.recordEmailSent()
+            print("Emergency contact notified successfully: \(emergencyEmail)")
+        } catch {
+            print("Failed to send emergency email: \(error.localizedDescription)")
+            // Fail silently - don't interrupt crisis flow
+            // Log error for debugging but don't show to user
+        }
+    }
+
     // #region agent log helper
     private func agentLog(runId: String, hypothesisId: String, location: String, message: String, data: [String: Any]) {
         let payload: [String: Any] = [
@@ -849,8 +887,7 @@ struct ChatBubble: View {
             .foregroundStyle(.secondary)
             .padding(.vertical, 2)
         } else {
-            Text(message.content)
-                .foregroundStyle(textColor)
+            MarkdownMessageText(markdown: message.content, foreground: textColor)
                 .textSelection(.enabled)
         }
     }
@@ -899,9 +936,41 @@ struct ChatBubble: View {
                 }
             }
             if !msg.content.isEmpty {
-                Text(msg.content)
-                    .foregroundStyle(textColor)
+                MarkdownMessageText(markdown: msg.content, foreground: textColor)
+                    .textSelection(.enabled)
             }
+        }
+    }
+}
+
+/// Renderizza Markdown nella chat (grassetto, corsivo, link, code) evitando di mostrare i caratteri `**`, `_`, ecc.
+/// Fallback automatico a testo semplice se il parsing fallisce.
+private struct MarkdownMessageText: View {
+    let markdown: String
+    let foreground: Color
+
+    var body: some View {
+        if let attributed = MarkdownMessageText.parse(markdown) {
+            Text(attributed)
+                .foregroundStyle(foreground)
+        } else {
+            Text(markdown)
+                .foregroundStyle(foreground)
+        }
+    }
+
+    private static func parse(_ markdown: String) -> AttributedString? {
+        guard !markdown.isEmpty else { return nil }
+        do {
+            return try AttributedString(
+                markdown: markdown,
+                options: AttributedString.MarkdownParsingOptions(
+                    interpretedSyntax: .full,
+                    failurePolicy: .returnPartiallyParsedIfPossible
+                )
+            )
+        } catch {
+            return nil
         }
     }
 }

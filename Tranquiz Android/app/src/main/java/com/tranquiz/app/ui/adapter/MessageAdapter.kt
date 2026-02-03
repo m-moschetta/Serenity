@@ -10,6 +10,7 @@ import com.tranquiz.app.data.model.Message
 import com.tranquiz.app.databinding.ItemMessageAiBinding
 import com.tranquiz.app.databinding.ItemMessageErrorBinding
 import com.tranquiz.app.databinding.ItemMessageUserBinding
+import io.noties.markwon.Markwon
 import org.ocpsoft.prettytime.PrettyTime
 import java.util.*
 
@@ -22,6 +23,22 @@ class MessageAdapter : ListAdapter<Message, MessageAdapter.MessageViewHolder>(Me
 
     // Cache PrettyTime a livello adapter per evitare creazioni multiple
     private val prettyTime = PrettyTime(Locale.getDefault())
+
+    // Markwon viene inizializzato alla prima bind usando il Context della view
+    @Volatile
+    private var markwon: Markwon? = null
+
+    private fun markdown(context: android.content.Context): Markwon {
+        val existing = markwon
+        if (existing != null) return existing
+        synchronized(this) {
+            val again = markwon
+            if (again != null) return again
+            val created = Markwon.create(context)
+            markwon = created
+            return created
+        }
+    }
 
     override fun getItemViewType(position: Int): Int {
         val message = getItem(position)
@@ -52,14 +69,18 @@ class MessageAdapter : ListAdapter<Message, MessageAdapter.MessageViewHolder>(Me
     }
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-        holder.bind(getItem(position), prettyTime)
+        holder.bind(getItem(position), prettyTime, markwonProvider = { ctx -> markdown(ctx) })
     }
 
     /**
      * ViewHolder base astratto per tutti i tipi di messaggio.
      */
     abstract class MessageViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
-        abstract fun bind(message: Message, prettyTime: PrettyTime)
+        abstract fun bind(
+            message: Message,
+            prettyTime: PrettyTime,
+            markwonProvider: (android.content.Context) -> Markwon
+        )
     }
 
     /**
@@ -69,7 +90,11 @@ class MessageAdapter : ListAdapter<Message, MessageAdapter.MessageViewHolder>(Me
         private val binding: ItemMessageUserBinding
     ) : MessageViewHolder(binding.root) {
 
-        override fun bind(message: Message, prettyTime: PrettyTime) {
+        override fun bind(
+            message: Message,
+            prettyTime: PrettyTime,
+            markwonProvider: (android.content.Context) -> Markwon
+        ) {
             binding.tvMessageText.text = message.content
             binding.tvMessageTime.text = prettyTime.format(Date(message.timestamp))
         }
@@ -82,8 +107,13 @@ class MessageAdapter : ListAdapter<Message, MessageAdapter.MessageViewHolder>(Me
         private val binding: ItemMessageAiBinding
     ) : MessageViewHolder(binding.root) {
 
-        override fun bind(message: Message, prettyTime: PrettyTime) {
-            binding.tvMessageText.text = message.content
+        override fun bind(
+            message: Message,
+            prettyTime: PrettyTime,
+            markwonProvider: (android.content.Context) -> Markwon
+        ) {
+            // Render Markdown così **grassetto** viene formattato invece di mostrarsi letterale
+            markwonProvider(binding.root.context).setMarkdown(binding.tvMessageText, message.content)
             binding.tvMessageTime.text = prettyTime.format(Date(message.timestamp))
         }
     }
@@ -95,8 +125,13 @@ class MessageAdapter : ListAdapter<Message, MessageAdapter.MessageViewHolder>(Me
         private val binding: ItemMessageErrorBinding
     ) : MessageViewHolder(binding.root) {
 
-        override fun bind(message: Message, prettyTime: PrettyTime) {
-            binding.tvMessageText.text = message.content
+        override fun bind(
+            message: Message,
+            prettyTime: PrettyTime,
+            markwonProvider: (android.content.Context) -> Markwon
+        ) {
+            // Anche gli errori possono contenere Markdown (es. link o enfasi)
+            markwonProvider(binding.root.context).setMarkdown(binding.tvMessageText, message.content)
             binding.tvMessageTime.text = prettyTime.format(Date(message.timestamp))
         }
     }

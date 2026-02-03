@@ -80,6 +80,7 @@ struct ChatCompletionsRequest: Codable {
     let messages: [OpenAIMessage]
     let temperature: Double?
     let max_tokens: Int?
+    let max_completion_tokens: Int?
     let stream: Bool?
     let tools: [OpenAITool]?
     let tool_choice: String? // "auto"
@@ -146,34 +147,30 @@ final class OpenAIClient: AIProviderType {
     func chat(messages: [ProviderMessage], model: String = "gpt-5.2", temperature: Double = 0.4, maxTokens: Int = 800) async throws -> String {
         let trimmedKey = apiKeyProvider()?.trimmingCharacters(in: .whitespacesAndNewlines)
         let endpoint = resolveEndpoint(apiKey: trimmedKey)
-        var request = URLRequest(url: endpoint.url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        for (field, value) in endpoint.headers {
-            request.addValue(value, forHTTPHeaderField: field)
-        }
-        let body = ChatCompletionsRequest(
-            model: model,
-            messages: messages.map(Self.encodeProviderMessage),
-            temperature: temperature,
-            max_tokens: maxTokens,
-            stream: nil,
-            tools: nil,
-            tool_choice: nil
-        )
-        request.httpBody = try JSONEncoder().encode(body)
-        
         do {
-            let (data, response) = try await session.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                let text = String(data: data, encoding: .utf8) ?? ""
-                Diagnostics.shared.lastAIError = text
-                throw ClientError.invalidResponse("OpenAI: \(text)")
-            }
-            let decoded = try JSONDecoder().decode(ChatCompletionsResponse.self, from: data)
-            return decoded.choices.first?.message.contentText ?? ""
+            return try await performChatRequest(
+                endpoint: endpoint,
+                messages: messages,
+                model: model,
+                temperature: temperature,
+                maxTokens: maxTokens,
+                tools: nil,
+                toolChoice: nil,
+                useMaxCompletionTokens: true
+            )
         } catch {
-            Diagnostics.shared.lastAIError = error.localizedDescription
+            if shouldRetryWithMaxTokens(error: error) {
+                return try await performChatRequest(
+                    endpoint: endpoint,
+                    messages: messages,
+                    model: model,
+                    temperature: temperature,
+                    maxTokens: maxTokens,
+                    tools: nil,
+                    toolChoice: nil,
+                    useMaxCompletionTokens: false
+                )
+            }
             throw error
         }
     }
@@ -183,39 +180,28 @@ final class OpenAIClient: AIProviderType {
     func chatWithTools(messages: [ProviderMessage], model: String, temperature: Double, maxTokens: Int, tools: [OpenAITool]) async throws -> ChatResult {
         let trimmedKey = apiKeyProvider()?.trimmingCharacters(in: .whitespacesAndNewlines)
         let endpoint = resolveEndpoint(apiKey: trimmedKey)
-        var request = URLRequest(url: endpoint.url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        for (field, value) in endpoint.headers {
-            request.addValue(value, forHTTPHeaderField: field)
-        }
-        let body = ChatCompletionsRequest(
-            model: model,
-            messages: messages.map(Self.encodeProviderMessage),
-            temperature: temperature,
-            max_tokens: maxTokens,
-            stream: nil,
-            tools: tools,
-            tool_choice: "auto"
-        )
-        request.httpBody = try JSONEncoder().encode(body)
-
         do {
-            let (data, response) = try await session.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                let text = String(data: data, encoding: .utf8) ?? ""
-                Diagnostics.shared.lastAIError = text
-                throw ClientError.invalidResponse("OpenAI: \(text)")
-            }
-            let decoded = try JSONDecoder().decode(ChatCompletionsResponse.self, from: data)
-            let msg = decoded.choices.first?.message
-            if let tool = msg?.tool_calls?.first {
-                return .tool(name: tool.function.name, argumentsJSON: tool.function.arguments)
-            } else {
-                return .content(msg?.contentText ?? "")
-            }
+            return try await performChatWithToolsRequest(
+                endpoint: endpoint,
+                messages: messages,
+                model: model,
+                temperature: temperature,
+                maxTokens: maxTokens,
+                tools: tools,
+                useMaxCompletionTokens: true
+            )
         } catch {
-            Diagnostics.shared.lastAIError = error.localizedDescription
+            if shouldRetryWithMaxTokens(error: error) {
+                return try await performChatWithToolsRequest(
+                    endpoint: endpoint,
+                    messages: messages,
+                    model: model,
+                    temperature: temperature,
+                    maxTokens: maxTokens,
+                    tools: tools,
+                    useMaxCompletionTokens: false
+                )
+            }
             throw error
         }
     }
@@ -240,6 +226,103 @@ final class OpenAIClient: AIProviderType {
             parts.append(OpenAIContentPart(type: "image_url", text: nil, image_url: OpenAIImageURL(url: uri)))
         }
         return OpenAIMessage(role: m.role, content: .parts(parts), tool_calls: nil)
+    }
+    
+    private func shouldRetryWithMaxTokens(error: Error) -> Bool {
+        if case ClientError.invalidResponse(let msg) = error {
+            return msg.lowercased().contains("max_completion_tokens")
+        }
+        return false
+    }
+
+    private func performChatRequest(
+        endpoint: ProxyGateway.Endpoint,
+        messages: [ProviderMessage],
+        model: String,
+        temperature: Double,
+        maxTokens: Int,
+        tools: [OpenAITool]?,
+        toolChoice: String?,
+        useMaxCompletionTokens: Bool
+    ) async throws -> String {
+        var request = URLRequest(url: endpoint.url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        for (field, value) in endpoint.headers {
+            request.addValue(value, forHTTPHeaderField: field)
+        }
+        let body = ChatCompletionsRequest(
+            model: model,
+            messages: messages.map(Self.encodeProviderMessage),
+            temperature: temperature,
+            max_tokens: useMaxCompletionTokens ? nil : maxTokens,
+            max_completion_tokens: useMaxCompletionTokens ? maxTokens : nil,
+            stream: nil,
+            tools: tools,
+            tool_choice: toolChoice
+        )
+        request.httpBody = try JSONEncoder().encode(body)
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                let text = String(data: data, encoding: .utf8) ?? ""
+                Diagnostics.shared.lastAIError = text
+                throw ClientError.invalidResponse("OpenAI: \(text)")
+            }
+            let decoded = try JSONDecoder().decode(ChatCompletionsResponse.self, from: data)
+            return decoded.choices.first?.message.contentText ?? ""
+        } catch {
+            Diagnostics.shared.lastAIError = error.localizedDescription
+            throw error
+        }
+    }
+
+    private func performChatWithToolsRequest(
+        endpoint: ProxyGateway.Endpoint,
+        messages: [ProviderMessage],
+        model: String,
+        temperature: Double,
+        maxTokens: Int,
+        tools: [OpenAITool],
+        useMaxCompletionTokens: Bool
+    ) async throws -> ChatResult {
+        var request = URLRequest(url: endpoint.url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        for (field, value) in endpoint.headers {
+            request.addValue(value, forHTTPHeaderField: field)
+        }
+        let body = ChatCompletionsRequest(
+            model: model,
+            messages: messages.map(Self.encodeProviderMessage),
+            temperature: temperature,
+            max_tokens: useMaxCompletionTokens ? nil : maxTokens,
+            max_completion_tokens: useMaxCompletionTokens ? maxTokens : nil,
+            stream: nil,
+            tools: tools,
+            tool_choice: "auto"
+        )
+        request.httpBody = try JSONEncoder().encode(body)
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                let text = String(data: data, encoding: .utf8) ?? ""
+                Diagnostics.shared.lastAIError = text
+                throw ClientError.invalidResponse("OpenAI: \(text)")
+            }
+            let decoded = try JSONDecoder().decode(ChatCompletionsResponse.self, from: data)
+            let msg = decoded.choices.first?.message
+            if let tool = msg?.tool_calls?.first {
+                return .tool(name: tool.function.name, argumentsJSON: tool.function.arguments)
+            } else {
+                return .content(msg?.contentText ?? "")
+            }
+        } catch {
+            Diagnostics.shared.lastAIError = error.localizedDescription
+            throw error
+        }
     }
     
     private func resolveEndpoint(apiKey: String?) -> ProxyGateway.Endpoint {
