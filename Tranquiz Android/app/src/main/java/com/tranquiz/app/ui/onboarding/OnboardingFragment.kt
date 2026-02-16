@@ -9,8 +9,12 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.tranquiz.app.R
 import com.tranquiz.app.databinding.FragmentOnboardingBinding
+import com.tranquiz.app.ui.onboarding.adapter.OnboardingAdapter
+import com.tranquiz.app.ui.onboarding.model.OnboardingOption
+import com.tranquiz.app.ui.onboarding.model.OnboardingQuestionKind
 import com.tranquiz.app.util.Constants
 
 /**
@@ -26,6 +30,10 @@ class OnboardingFragment : Fragment() {
     private var userName: String = ""
     private var userFeeling: String = ""
     private var userGoal: String = ""
+
+    private lateinit var optionsAdapter: OnboardingAdapter
+    private val feelingSelections = mutableSetOf<String>()
+    private val goalSelections = mutableSetOf<String>()
 
     // Tone preferences
     private var toneEmpathy: String = "empathetic"
@@ -80,9 +88,14 @@ class OnboardingFragment : Fragment() {
             toneMood = it.getString(KEY_TONE_MOOD, "serious") ?: "serious"
             toneLength = it.getString(KEY_TONE_LENGTH, "brief") ?: "brief"
             toneStyle = it.getString(KEY_TONE_STYLE, "intimate") ?: "intimate"
+            feelingSelections.clear()
+            feelingSelections.addAll(it.getStringArrayList(KEY_FEELING_SELECTIONS) ?: emptyList())
+            goalSelections.clear()
+            goalSelections.addAll(it.getStringArrayList(KEY_GOAL_SELECTIONS) ?: emptyList())
         }
 
         setupClickListeners()
+        setupOptionsRecycler()
         showStep(currentStep)
     }
 
@@ -98,6 +111,8 @@ class OnboardingFragment : Fragment() {
         outState.putString(KEY_TONE_MOOD, toneMood)
         outState.putString(KEY_TONE_LENGTH, toneLength)
         outState.putString(KEY_TONE_STYLE, toneStyle)
+        outState.putStringArrayList(KEY_FEELING_SELECTIONS, ArrayList(feelingSelections))
+        outState.putStringArrayList(KEY_GOAL_SELECTIONS, ArrayList(goalSelections))
         super.onSaveInstanceState(outState)
     }
 
@@ -138,15 +153,18 @@ class OnboardingFragment : Fragment() {
         if (currentStep == 3) {
             // Mostra tone selection, nascondi input text
             binding.tilOnboardingInput.visibility = View.GONE
+            binding.rvOnboardingOptions.visibility = View.GONE
             binding.toneSelectionContainer.visibility = View.VISIBLE
             binding.tvOnboardingQuestion.setText(R.string.onboarding_tone_title)
+            binding.tvOnboardingQuestionSubtitle.visibility = View.GONE
             binding.btnOnboardingPrimary.setText(R.string.finish)
 
             // Ripristina le selezioni dei chip
             restoreToneSelections()
-        } else {
-            // Steps 0-2: mostra input text, nascondi tone selection
+        } else if (currentStep == 0) {
+            // Step 0: mostra input text, nascondi opzioni e tone selection
             binding.tilOnboardingInput.visibility = View.VISIBLE
+            binding.rvOnboardingOptions.visibility = View.GONE
             binding.toneSelectionContainer.visibility = View.GONE
 
             val config = getStepConfig(currentStep)
@@ -156,6 +174,24 @@ class OnboardingFragment : Fragment() {
             binding.etOnboardingInput.setText(config.value)
             binding.etOnboardingInput.setSelection(binding.etOnboardingInput.text?.length ?: 0)
             binding.btnOnboardingPrimary.setText(config.buttonRes)
+            binding.tvOnboardingQuestionSubtitle.visibility = View.GONE
+        } else {
+            // Steps 1-2: mostra opzioni multiple
+            binding.tilOnboardingInput.visibility = View.GONE
+            binding.rvOnboardingOptions.visibility = View.VISIBLE
+            binding.toneSelectionContainer.visibility = View.GONE
+            binding.tvOnboardingQuestionSubtitle.visibility = View.VISIBLE
+            binding.tvOnboardingQuestionSubtitle.setText(R.string.onboarding_multi_subtitle)
+
+            if (currentStep == 1) {
+                binding.tvOnboardingQuestion.setText(R.string.onboarding_feeling_title)
+                binding.btnOnboardingPrimary.setText(R.string.next)
+            } else {
+                binding.tvOnboardingQuestion.setText(R.string.onboarding_goal_title)
+                binding.btnOnboardingPrimary.setText(R.string.next)
+            }
+
+            updateOptionsUi()
         }
 
         // Mostra/nascondi pulsante back
@@ -220,8 +256,8 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun updateProgressDots(activeStep: Int) {
-        val activeColor = ContextCompat.getColor(requireContext(), R.color.primary_color)
-        val inactiveColor = ContextCompat.getColor(requireContext(), R.color.text_hint)
+        val activeColor = ContextCompat.getColor(binding.root.context, R.color.primary_color)
+        val inactiveColor = ContextCompat.getColor(binding.root.context, R.color.text_hint)
 
         binding.dot1.setCardBackgroundColor(if (activeStep == 0) activeColor else inactiveColor)
         binding.dot2.setCardBackgroundColor(if (activeStep == 1) activeColor else inactiveColor)
@@ -234,13 +270,91 @@ class OnboardingFragment : Fragment() {
             // Save tone selections from ChipGroups
             saveToneSelections()
         } else {
-            val value = binding.etOnboardingInput.text?.toString()?.trim().orEmpty()
             when (currentStep) {
-                0 -> userName = value
-                1 -> userFeeling = value
-                2 -> userGoal = value
+                0 -> {
+                    val value = binding.etOnboardingInput.text?.toString()?.trim().orEmpty()
+                    userName = value
+                }
+                1 -> userFeeling = selectionsToText(feelingSelections, buildFeelingOptions())
+                2 -> userGoal = selectionsToText(goalSelections, buildGoalOptions())
             }
         }
+    }
+
+    private fun setupOptionsRecycler() {
+        optionsAdapter = OnboardingAdapter { option ->
+            handleOptionSelection(option)
+        }
+        binding.rvOnboardingOptions.layoutManager = LinearLayoutManager(binding.root.context)
+        binding.rvOnboardingOptions.adapter = optionsAdapter
+    }
+
+    private fun updateOptionsUi() {
+        if (!::optionsAdapter.isInitialized) {
+            setupOptionsRecycler()
+        }
+        if (binding.rvOnboardingOptions.layoutManager == null) {
+            binding.rvOnboardingOptions.layoutManager = LinearLayoutManager(binding.root.context)
+        }
+        if (binding.rvOnboardingOptions.adapter == null) {
+            binding.rvOnboardingOptions.adapter = optionsAdapter
+        }
+        val (options, selections) = when (currentStep) {
+            1 -> Pair(buildFeelingOptions(), feelingSelections)
+            2 -> Pair(buildGoalOptions(), goalSelections)
+            else -> Pair(emptyList(), mutableSetOf<String>())
+        }
+        if (options.isEmpty()) return
+        optionsAdapter.submitList(options, selections, OnboardingQuestionKind.MultiChoice(max = 3))
+    }
+
+    private fun handleOptionSelection(option: OnboardingOption) {
+        val maxSelections = 3
+        val selections = when (currentStep) {
+            1 -> feelingSelections
+            2 -> goalSelections
+            else -> return
+        }
+
+        if (selections.contains(option.id)) {
+            selections.remove(option.id)
+        } else if (selections.size < maxSelections) {
+            selections.add(option.id)
+        }
+        updateOptionsUi()
+    }
+
+    private fun buildFeelingOptions(): List<OnboardingOption> {
+        return listOf(
+            OnboardingOption(id = "calm", title = getString(R.string.onboarding_feeling_option_calm)),
+            OnboardingOption(id = "anxious", title = getString(R.string.onboarding_feeling_option_anxious)),
+            OnboardingOption(id = "tired", title = getString(R.string.onboarding_feeling_option_tired)),
+            OnboardingOption(id = "sad", title = getString(R.string.onboarding_feeling_option_sad)),
+            OnboardingOption(id = "motivated", title = getString(R.string.onboarding_feeling_option_motivated)),
+            OnboardingOption(id = "overwhelmed", title = getString(R.string.onboarding_feeling_option_overwhelmed)),
+            OnboardingOption(id = "hopeful", title = getString(R.string.onboarding_feeling_option_hopeful)),
+            OnboardingOption(id = "irritable", title = getString(R.string.onboarding_feeling_option_irritable))
+        )
+    }
+
+    private fun buildGoalOptions(): List<OnboardingOption> {
+        return listOf(
+            OnboardingOption(id = "anxiety", title = getString(R.string.onboarding_goal_option_anxiety)),
+            OnboardingOption(id = "mood", title = getString(R.string.onboarding_goal_option_mood)),
+            OnboardingOption(id = "sleep", title = getString(R.string.onboarding_goal_option_sleep)),
+            OnboardingOption(id = "stress", title = getString(R.string.onboarding_goal_option_stress)),
+            OnboardingOption(id = "motivation", title = getString(R.string.onboarding_goal_option_motivation)),
+            OnboardingOption(id = "relationships", title = getString(R.string.onboarding_goal_option_relationships)),
+            OnboardingOption(id = "selfesteem", title = getString(R.string.onboarding_goal_option_selfesteem))
+        )
+    }
+
+    private fun selectionsToText(
+        selections: Set<String>,
+        options: List<OnboardingOption>
+    ): String {
+        return options.filter { selections.contains(it.id) }
+            .joinToString(", ") { it.title }
     }
 
     private fun saveToneSelections() {
@@ -325,6 +439,8 @@ class OnboardingFragment : Fragment() {
         private const val KEY_TONE_MOOD = "onboarding_tone_mood"
         private const val KEY_TONE_LENGTH = "onboarding_tone_length"
         private const val KEY_TONE_STYLE = "onboarding_tone_style"
+        private const val KEY_FEELING_SELECTIONS = "onboarding_feeling_selections"
+        private const val KEY_GOAL_SELECTIONS = "onboarding_goal_selections"
 
         fun newInstance(): OnboardingFragment {
             return OnboardingFragment()

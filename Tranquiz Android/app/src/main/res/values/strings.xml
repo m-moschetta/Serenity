@@ -149,6 +149,22 @@
     <string name="onboarding_feeling_hint">Esempio: stressato, sereno, stanco…</string>
     <string name="onboarding_goal_title">Cosa ti piacerebbe ottenere da Tranquiz?</string>
     <string name="onboarding_goal_hint">Esempio: gestire ansia, motivazione, abitudini…</string>
+    <string name="onboarding_multi_subtitle">Puoi scegliere fino a 3 opzioni</string>
+    <string name="onboarding_feeling_option_calm">Sereno</string>
+    <string name="onboarding_feeling_option_anxious">Ansioso</string>
+    <string name="onboarding_feeling_option_tired">Stanco</string>
+    <string name="onboarding_feeling_option_sad">Triste</string>
+    <string name="onboarding_feeling_option_motivated">Motivato</string>
+    <string name="onboarding_feeling_option_overwhelmed">Sopraffatto</string>
+    <string name="onboarding_feeling_option_hopeful">Speranzoso</string>
+    <string name="onboarding_feeling_option_irritable">Irritato</string>
+    <string name="onboarding_goal_option_anxiety">Gestire l’ansia</string>
+    <string name="onboarding_goal_option_mood">Migliorare l’umore</string>
+    <string name="onboarding_goal_option_sleep">Dormire meglio</string>
+    <string name="onboarding_goal_option_stress">Ridurre lo stress</string>
+    <string name="onboarding_goal_option_motivation">Motivazione e abitudini</string>
+    <string name="onboarding_goal_option_relationships">Relazioni</string>
+    <string name="onboarding_goal_option_selfesteem">Autostima</string>
 
     <string name="next">Avanti</string>
     <string name="finish">Fine</string>
