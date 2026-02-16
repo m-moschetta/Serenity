@@ -588,39 +588,6 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
         return if (singleLine.length <= max) singleLine else singleLine.take(max).trimEnd() + "…"
     }
 
-    private fun showGatewayKeyDialog() {
-        val title = getString(R.string.pref_gateway_api_key_title)
-        val currentValue = SecurePreferences.getApiKey(this, "")
-
-        val inputLayout = TextInputLayout(this).apply {
-            hint = title
-            boxBackgroundMode = 1
-        }
-
-        val input = TextInputEditText(inputLayout.context).apply {
-            setText(currentValue)
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
-
-        inputLayout.addView(input)
-
-        MaterialAlertDialogBuilder(this)
-            .setTitle(title)
-            .setView(inputLayout)
-            .setPositiveButton(R.string.settings_save) { _, _ ->
-                val newValue = input.text?.toString()?.trim().orEmpty()
-                if (newValue.isBlank()) {
-                    SecurePreferences.clearApiKey(this)
-                } else {
-                    SecurePreferences.saveApiKey(this, newValue)
-                }
-                loadSettings()
-                Toast.makeText(this, "Salvato: $title", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
-
     private fun migrateGatewayApiKeyToSecureIfNeeded() {
         val legacy = prefs.getString(Constants.Prefs.GATEWAY_API_KEY, null)?.trim().orEmpty()
         if (legacy.isNotBlank() && !SecurePreferences.hasApiKey(this)) {

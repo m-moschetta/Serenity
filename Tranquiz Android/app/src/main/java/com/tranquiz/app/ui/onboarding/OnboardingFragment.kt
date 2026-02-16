@@ -237,29 +237,13 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun getStepConfig(step: Int): StepConfig {
-        return when (step) {
-            0 -> StepConfig(
-                titleRes = R.string.onboarding_name_title,
-                hintRes = R.string.onboarding_name_hint,
-                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS,
-                value = userName,
-                buttonRes = R.string.next
-            )
-            1 -> StepConfig(
-                titleRes = R.string.onboarding_feeling_title,
-                hintRes = R.string.onboarding_feeling_hint,
-                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
-                value = userFeeling,
-                buttonRes = R.string.next
-            )
-            else -> StepConfig(
-                titleRes = R.string.onboarding_goal_title,
-                hintRes = R.string.onboarding_goal_hint,
-                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE,
-                value = userGoal,
-                buttonRes = R.string.next  // Now "next" since step 3 follows
-            )
-        }
+        return StepConfig(
+            titleRes = R.string.onboarding_name_title,
+            hintRes = R.string.onboarding_name_hint,
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS,
+            value = userName,
+            buttonRes = R.string.next
+        )
     }
 
     private fun updateProgressDots(activeStep: Int) {

@@ -12,11 +12,7 @@
     <string name="message_hint">Scrivi un messaggio…</string>
     <string name="send_message">Invia messaggio</string>
     <string name="menu">Menu</string>
-    
-    <!-- Welcome Messages -->
-    <string name="welcome_message">Ciao! Sono Tranquiz, il tuo assistente personale per il benessere mentale. Come posso aiutarti oggi?</string>
-    <string name="welcome_subtitle">Sono qui per ascoltarti e supportarti nel tuo percorso di crescita personale.</string>
-    
+        
     <!-- Error Messages -->
     <string name="error_network">Errore di connessione. Controlla la tua connessione internet.</string>
     <string name="error_api">Errore del servizio. Riprova più tardi.</string>
@@ -48,7 +44,7 @@
     <string name="nav_profile">Profilo</string>
     
     <!-- Menu Options -->
-    <string name="menu_clear_chat">Cancella conversazione</string>
+    <string name="menu_clear_chat">Cancella Conversazione</string>
     <string name="menu_settings">Impostazioni</string>
     <string name="menu_profile">Profilo</string>
     <string name="menu_about">Informazioni</string>
@@ -59,10 +55,6 @@
     <string name="yes">Sì</string>
     <string name="no">No</string>
     <string name="cancel">Annulla</string>
-    
-    <!-- Settings -->
-    <string name="settings_api_key">Chiave API</string>
-    <string name="settings_api_key_hint">Inserisci la tua chiave API OpenAI</string>
     <string name="settings_save">Salva</string>
 
     <!-- Provider Configurations -->
@@ -70,24 +62,16 @@
     <string name="gateway_base_url">https://llm-proxy-gateway.mariomos94.workers.dev/</string>
 
     <!-- OpenAI -->
-    <string name="provider_openai_base_url">https://api.openai.com/</string>
-    <string name="provider_openai_api_key">sk-your-openai-api-key-here</string>
-    <string name="provider_openai_default_model">gpt-5</string>
+    <string name="provider_openai_default_model">gpt-5.2</string>
 
     <!-- Anthropic -->
-    <string name="provider_anthropic_base_url">https://api.anthropic.com/</string>
-    <string name="provider_anthropic_api_key">sk-ant-your-anthropic-api-key-here</string>
-    <string name="provider_anthropic_default_model">claude-3-5-sonnet-20241022</string>
+    <string name="provider_anthropic_default_model">claude-sonnet-4-5-20250929</string>
 
     <!-- Perplexity -->
-    <string name="provider_perplexity_base_url">https://api.perplexity.ai/</string>
-    <string name="provider_perplexity_api_key">pplx-your-perplexity-api-key-here</string>
     <string name="provider_perplexity_default_model">llama-3.1-sonar-large-128k-online</string>
 
     <!-- Groq -->
-    <string name="provider_groq_base_url">https://api.groq.com/</string>
-    <string name="provider_groq_api_key">gsk_your-groq-api-key-here</string>
-    <string name="provider_groq_default_model">llama3-8b-8192</string>
+    <string name="provider_groq_default_model">llama-3.3-70b-versatile</string>
 
     <!-- Current Provider Selection -->
     <string name="current_provider">openai</string>
@@ -97,9 +81,9 @@
     <string name="about_version">Versione 1.0</string>
 
     <!-- Settings strings -->
-    <string name="pref_current_provider_title">Provider corrente</string>
+    <string name="pref_current_provider_title">Provider Corrente</string>
     <string name="pref_current_provider_summary">Seleziona il provider AI da usare</string>
-    <string name="pref_models_category_title">Modelli per provider</string>
+    <string name="pref_models_category_title">Modelli per Provider</string>
     <string name="pref_model_openai_title">Modello OpenAI</string>
     <string name="pref_model_anthropic_title">Modello Anthropic</string>
     <string name="pref_model_perplexity_title">Modello Perplexity</string>
@@ -123,20 +107,16 @@
     <!-- Gateway settings -->
     <string name="pref_gateway_category_title">Gateway</string>
     <string name="pref_gateway_base_url_title">Gateway Base URL</string>
-    <string name="pref_gateway_api_key_title">Gateway API Key</string>
-    <string name="pref_gateway_api_key_summary">Tocca per impostare la chiave del gateway</string>
-    <string name="pref_gateway_test_title">Test connessione gateway</string>
+    <string name="pref_gateway_test_title">Test Connessione Gateway</string>
     <string name="pref_gateway_test_summary">Verifica URL, token e provider; mostra esito</string>
 
-    <string name="ui_conversation_blocked">Conversazione bloccata per motivi di sicurezza</string>
-
     <string name="pref_chat_category_title">Chat</string>
-    <string name="pref_system_prompt_title">Prompt di sistema</string>
+    <string name="pref_system_prompt_title">Prompt di Sistema</string>
     <string name="pref_system_prompt_summary">Personalizza il comportamento di Tranquiz</string>
     <string name="pref_clear_chat_summary">Elimina tutti i messaggi della conversazione</string>
 
-    <string name="pref_emergency_contact_title">Contatto di emergenza</string>
-    <string name="pref_emergency_contact_email_title">Email contatto emergenza</string>
+    <string name="pref_emergency_contact_title">Contatto di Emergenza</string>
+    <string name="pref_emergency_contact_email_title">Email Contatto Emergenza</string>
     <string name="pref_emergency_contact_email_summary">Aggiungi un contatto per notifiche in caso di crisi (max 1 ogni 24h)</string>
     <string name="pref_emergency_contact_remove_title">Rimuovi contatto</string>
     <string name="pref_emergency_contact_remove_summary">Elimina l’email di emergenza salvata</string>
@@ -147,9 +127,7 @@
     <string name="onboarding_name_title">Come ti chiami?</string>
     <string name="onboarding_name_hint">Nome (opzionale)</string>
     <string name="onboarding_feeling_title">Come ti senti oggi?</string>
-    <string name="onboarding_feeling_hint">Esempio: stressato, sereno, stanco…</string>
     <string name="onboarding_goal_title">Cosa ti piacerebbe ottenere da Tranquiz?</string>
-    <string name="onboarding_goal_hint">Esempio: gestire ansia, motivazione, abitudini…</string>
     <string name="onboarding_multi_subtitle">Puoi scegliere fino a 3 opzioni</string>
     <string name="onboarding_feeling_option_calm">Sereno</string>
     <string name="onboarding_feeling_option_anxious">Ansioso</string>
@@ -216,8 +194,8 @@
     <string name="pref_tone_style_title">Stile</string>
     <string name="pref_tone_style_summary">Intimo o professionale</string>
 
-    <string name="pref_checkin_reminders_category_title">Promemoria check-in</string>
-    <string name="pref_checkin_reminders_title">Attiva promemoria</string>
+    <string name="pref_checkin_reminders_category_title">Promemoria Check-in</string>
+    <string name="pref_checkin_reminders_title">Attiva Promemoria</string>
     <string name="pref_checkin_reminders_summary">Ricevi un promemoria al mattino e alla sera</string>
     <string name="pref_checkin_morning_time_title">Orario check-in mattutino</string>
     <string name="pref_checkin_evening_time_title">Orario check-in serale</string>
@@ -350,6 +328,6 @@
     <string name="pref_provider_section">Provider AI</string>
     <string name="pref_info_section">Informazioni</string>
     <string name="pref_version_title">Versione</string>
-    <string name="pref_reset_onboarding_title">Ripristina onboarding</string>
+    <string name="pref_reset_onboarding_title">Ripristina Onboarding</string>
     <string name="pref_reset_onboarding_summary">Mostra di nuovo la schermata di benvenuto</string>
 </resources>
