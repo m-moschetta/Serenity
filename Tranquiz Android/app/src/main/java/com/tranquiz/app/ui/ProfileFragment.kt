@@ -9,12 +9,14 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.preference.PreferenceManager
 import com.tranquiz.app.R
 import com.tranquiz.app.data.database.AppDatabase
 import com.tranquiz.app.data.model.CheckInType
 import com.tranquiz.app.data.model.MoodEntry
 import com.tranquiz.app.databinding.FragmentProfileBinding
 import com.tranquiz.app.ui.adapter.CheckInAdapter
+import com.tranquiz.app.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,13 +100,10 @@ class ProfileFragment : Fragment() {
         binding.cardToneSettings.setOnClickListener {
             Toast.makeText(requireContext(), "Impostazioni tono", Toast.LENGTH_SHORT).show()
         }
-        
-        binding.cardOnboardingSummary.setOnClickListener {
-            Toast.makeText(requireContext(), "Riepilogo profilo", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun loadProfileData() {
+        updateOnboardingAnswers()
         val database = AppDatabase.getDatabase(requireContext())
         val moodDao = database.moodDao()
         
@@ -179,6 +178,18 @@ class ProfileFragment : Fragment() {
 
     private fun updateCheckInList(entries: List<MoodEntry>) {
         checkInAdapter.updateEntries(entries.take(10))
+    }
+
+    private fun updateOnboardingAnswers() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val name = prefs.getString(Constants.Prefs.ONBOARDING_NAME, "")?.trim().orEmpty()
+        val feeling = prefs.getString(Constants.Prefs.ONBOARDING_FEELING, "")?.trim().orEmpty()
+        val goal = prefs.getString(Constants.Prefs.ONBOARDING_GOAL, "")?.trim().orEmpty()
+        val fallback = getString(R.string.profile_not_set)
+
+        binding.tvOnboardingNameValue.text = if (name.isNotEmpty()) name else fallback
+        binding.tvOnboardingFeelingValue.text = if (feeling.isNotEmpty()) feeling else fallback
+        binding.tvOnboardingGoalValue.text = if (goal.isNotEmpty()) goal else fallback
     }
 
     private fun showMorningCheckInDialog() {

@@ -1,23 +1,31 @@
 package com.tranquiz.app.ui
 
+import android.Manifest
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.tranquiz.app.R
 import com.tranquiz.app.data.api.ApiClient
 import com.tranquiz.app.data.catalog.ModelCatalog
 import com.tranquiz.app.data.model.AIProvider
 import com.tranquiz.app.data.preferences.SecurePreferences
 import com.tranquiz.app.databinding.ActivitySettingsBinding
+import com.tranquiz.app.util.CheckInNotificationScheduler
 import com.tranquiz.app.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,10 +37,12 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private var developerModeTaps = 0
     private var lastTapTime = 0L
+    private var isLoadingSettings = false
 
     companion object {
         private const val DEVELOPER_TAPS_REQUIRED = 5
         private const val TAP_TIMEOUT_MS = 2000L // 2 secondi tra i tocchi
+        private const val NOTIFICATION_PERMISSION_REQUEST = 1201
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -222,6 +232,34 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
         binding.settingResetOnboarding.setOnClickListener {
             showResetOnboardingDialog()
         }
+
+        binding.switchCheckinReminders.setOnCheckedChangeListener { _, isChecked ->
+            if (isLoadingSettings) return@setOnCheckedChangeListener
+            prefs.edit().putBoolean(Constants.Prefs.CHECKIN_REMINDERS_ENABLED, isChecked).apply()
+            if (isChecked) {
+                ensureNotificationPermission()
+            }
+            updateCheckInReminderState(isChecked)
+            CheckInNotificationScheduler.scheduleAll(this)
+        }
+
+        binding.settingCheckinMorningTime.setOnClickListener {
+            showTimePicker(
+                R.string.pref_checkin_morning_time_title,
+                Constants.Prefs.CHECKIN_MORNING_TIME,
+                8,
+                0
+            )
+        }
+
+        binding.settingCheckinEveningTime.setOnClickListener {
+            showTimePicker(
+                R.string.pref_checkin_evening_time_title,
+                Constants.Prefs.CHECKIN_EVENING_TIME,
+                21,
+                0
+            )
+        }
     }
 
     private fun showModelDialog(prefKey: String, provider: AIProvider, titleRes: Int) {
@@ -381,6 +419,8 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
     }
 
     private fun loadSettings() {
+        isLoadingSettings = true
+
         // Provider
         val providerValue = prefs.getString(Constants.Prefs.CURRENT_PROVIDER, "openai") ?: "openai"
         val providerEntries = resources.getStringArray(R.array.provider_entries)
@@ -428,6 +468,90 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
 
         // Versione
         binding.tvVersionValue.text = getString(R.string.about_version)
+
+        val remindersEnabled = prefs.getBoolean(Constants.Prefs.CHECKIN_REMINDERS_ENABLED, false)
+        binding.switchCheckinReminders.isChecked = remindersEnabled
+        binding.tvCheckinMorningTimeValue.text = formatTimePref(Constants.Prefs.CHECKIN_MORNING_TIME, 8, 0)
+        binding.tvCheckinEveningTimeValue.text = formatTimePref(Constants.Prefs.CHECKIN_EVENING_TIME, 21, 0)
+        updateCheckInReminderState(remindersEnabled)
+
+        isLoadingSettings = false
+    }
+
+    private fun updateCheckInReminderState(enabled: Boolean) {
+        val alpha = if (enabled) 1f else 0.5f
+        binding.settingCheckinMorningTime.isEnabled = enabled
+        binding.settingCheckinMorningTime.alpha = alpha
+        binding.settingCheckinEveningTime.isEnabled = enabled
+        binding.settingCheckinEveningTime.alpha = alpha
+    }
+
+    private fun showTimePicker(titleRes: Int, prefKey: String, defaultHour: Int, defaultMinute: Int) {
+        val (hour, minute) = getTimePref(prefKey, defaultHour, defaultMinute)
+        val picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_24H)
+            .setHour(hour)
+            .setMinute(minute)
+            .setTitleText(titleRes)
+            .build()
+
+        picker.addOnPositiveButtonClickListener {
+            saveTimePref(prefKey, picker.hour, picker.minute)
+            loadSettings()
+            CheckInNotificationScheduler.scheduleAll(this)
+        }
+
+        picker.show(supportFragmentManager, prefKey)
+    }
+
+    private fun getTimePref(prefKey: String, defaultHour: Int, defaultMinute: Int): Pair<Int, Int> {
+        val value = prefs.getString(prefKey, null) ?: return Pair(defaultHour, defaultMinute)
+        val parts = value.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: defaultHour
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: defaultMinute
+        return Pair(hour.coerceIn(0, 23), minute.coerceIn(0, 59))
+    }
+
+    private fun saveTimePref(prefKey: String, hour: Int, minute: Int) {
+        prefs.edit().putString(prefKey, formatTime(hour, minute)).apply()
+    }
+
+    private fun formatTimePref(prefKey: String, defaultHour: Int, defaultMinute: Int): String {
+        val (hour, minute) = getTimePref(prefKey, defaultHour, defaultMinute)
+        return formatTime(hour, minute)
+    }
+
+    private fun formatTime(hour: Int, minute: Int): String {
+        return String.format("%02d:%02d", hour, minute)
+    }
+
+    private fun ensureNotificationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST
+            )
+        }
+        return granted
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != NOTIFICATION_PERMISSION_REQUEST) return
+        val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            prefs.edit().putBoolean(Constants.Prefs.CHECKIN_REMINDERS_ENABLED, false).apply()
+            loadSettings()
+            CheckInNotificationScheduler.scheduleAll(this)
+            Toast.makeText(this, "Permesso notifiche negato", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun loadModelSetting(titleView: TextView, valueView: TextView, prefKey: String, titleRes: Int) {

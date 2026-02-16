@@ -39,6 +39,11 @@ object Constants {
         const val TONE_MOOD = "pref_tone_mood"            // "serious" | "light"
         const val TONE_LENGTH = "pref_tone_length"        // "brief" | "detailed"
         const val TONE_STYLE = "pref_tone_style"          // "intimate" | "professional"
+
+        // Notifiche check-in
+        const val CHECKIN_REMINDERS_ENABLED = "pref_checkin_reminders_enabled"
+        const val CHECKIN_MORNING_TIME = "pref_checkin_morning_time"
+        const val CHECKIN_EVENING_TIME = "pref_checkin_evening_time"
     }
 
     // ==================== Configurazione API ====================

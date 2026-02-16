@@ -199,6 +199,17 @@
     <string name="pref_tone_style_title">Stile</string>
     <string name="pref_tone_style_summary">Intimo o professionale</string>
 
+    <string name="pref_checkin_reminders_category_title">Promemoria check-in</string>
+    <string name="pref_checkin_reminders_title">Attiva promemoria</string>
+    <string name="pref_checkin_reminders_summary">Ricevi un promemoria al mattino e alla sera</string>
+    <string name="pref_checkin_morning_time_title">Orario check-in mattutino</string>
+    <string name="pref_checkin_evening_time_title">Orario check-in serale</string>
+    <string name="checkin_notification_channel_name">Promemoria check-in</string>
+    <string name="checkin_notification_morning_title">Check-in mattutino</string>
+    <string name="checkin_notification_morning_body">Come ti senti oggi? Fai il tuo check-in.</string>
+    <string name="checkin_notification_evening_title">Check-in serale</string>
+    <string name="checkin_notification_evening_body">Com’è andata la giornata? Fai il tuo check-in.</string>
+
     <!-- Tone arrays for ListPreference -->
     <string-array name="tone_empathy_entries">
         <item>Empatico</item>
@@ -270,6 +281,10 @@
     <string name="profile_personalization">Personalizzazione</string>
     <string name="profile_tone_settings">Tono di voce</string>
     <string name="profile_onboarding_summary">Profilo e preferenze</string>
+    <string name="profile_onboarding_name">Nome</string>
+    <string name="profile_onboarding_feeling">Come ti senti</string>
+    <string name="profile_onboarding_goal">Obiettivo</string>
+    <string name="profile_not_set">Non indicato</string>
     <string name="profile_recent_check_ins">Check-in recenti</string>
     <string name="profile_start_tracking">Inizia a tracciare il tuo umore</string>
     <string name="profile_start_tracking_subtitle">I check-in giornalieri ti aiuteranno a capire meglio come ti senti nel tempo.</string>
