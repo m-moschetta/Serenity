@@ -48,7 +48,10 @@ class CheckInAdapter(private var entries: List<MoodEntry>) : RecyclerView.Adapte
             
             when (entry.checkInType) {
                 CheckInType.MORNING -> {
-                    tvContent.text = entry.morningMotivation ?: "Nessuna motivazione"
+                    val motivation = entry.morningMotivation?.let { getMorningMotivationLabel(it) }
+                        ?: "Nessuna motivazione"
+                    val fear = entry.morningFear?.let { getMorningFearLabel(it) } ?: "Nessuna"
+                    tvContent.text = "Motivazione: $motivation • Paura: $fear"
                 }
                 CheckInType.EVENING -> {
                     val moodIds = try {
@@ -93,6 +96,30 @@ class CheckInAdapter(private var entries: List<MoodEntry>) : RecyclerView.Adapte
                 "sad" -> "Triste"
                 "very_sad" -> "Molto triste"
                 "overwhelmed" -> "Sopraffatto"
+                else -> id
+            }
+        }
+
+        private fun getMorningMotivationLabel(id: String): String {
+            return when (id) {
+                "energy" -> "Avere energia"
+                "focus" -> "Restare concentrato"
+                "relationships" -> "Curare le relazioni"
+                "growth" -> "Crescita personale"
+                "health" -> "Salute e benessere"
+                "gratitude" -> "Gratitudine"
+                else -> id
+            }
+        }
+
+        private fun getMorningFearLabel(id: String): String {
+            return when (id) {
+                "stress" -> "Stress"
+                "anxiety" -> "Ansia"
+                "uncertainty" -> "Incertezza"
+                "loneliness" -> "Solitudine"
+                "tiredness" -> "Stanchezza"
+                "none" -> "Nessuna in particolare"
                 else -> id
             }
         }

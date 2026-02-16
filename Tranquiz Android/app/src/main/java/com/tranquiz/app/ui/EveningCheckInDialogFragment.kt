@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.chip.Chip
-import com.tranquiz.app.R
 import com.tranquiz.app.databinding.DialogEveningCheckInBinding
 
 class EveningCheckInDialogFragment : DialogFragment() {
@@ -43,6 +42,11 @@ class EveningCheckInDialogFragment : DialogFragment() {
     
     fun setOnSaveListener(listener: (List<String>) -> Unit) {
         onSaveListener = listener
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
     }
     
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -86,11 +90,11 @@ class EveningCheckInDialogFragment : DialogFragment() {
     
     private fun setupMoodChips() {
         moodAdjectives.forEach { (id, label) ->
-            val chip = Chip(requireContext())
+            val chip = Chip(requireContext(), null, com.google.android.material.R.attr.chipStyle)
+            chip.id = View.generateViewId()
             chip.text = label
             chip.tag = id
             chip.isCheckable = true
-            chip.chipBackgroundColor = resources.getColorStateList(R.color.profile_card_amber, null)
             binding.chipGroupMoods.addView(chip)
         }
     }
