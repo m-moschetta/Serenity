@@ -22,8 +22,10 @@ import com.google.android.material.timepicker.TimeFormat
 import com.tranquiz.app.R
 import com.tranquiz.app.data.api.ApiClient
 import com.tranquiz.app.data.catalog.ModelCatalog
+import com.tranquiz.app.data.database.AppDatabase
 import com.tranquiz.app.data.model.AIProvider
 import com.tranquiz.app.data.preferences.SecurePreferences
+import com.tranquiz.app.data.repository.ChatRepository
 import com.tranquiz.app.databinding.ActivitySettingsBinding
 import com.tranquiz.app.util.CheckInNotificationScheduler
 import com.tranquiz.app.util.Constants
@@ -186,26 +188,6 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
             }
         }
 
-        // Tono
-        findViewById<View>(R.id.setting_tone_empathy)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
-        }
-        findViewById<View>(R.id.setting_tone_approach)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
-        }
-        findViewById<View>(R.id.setting_tone_energy)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
-        }
-        findViewById<View>(R.id.setting_tone_mood)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
-        }
-        findViewById<View>(R.id.setting_tone_length)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
-        }
-        findViewById<View>(R.id.setting_tone_style)?.setOnClickListener {
-            showToneDialog(Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
-        }
-
         // Gateway
         binding.settingGatewayUrl.setOnClickListener {
             showTextInputDialog(
@@ -213,10 +195,6 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
                 prefs.getString(Constants.Prefs.GATEWAY_BASE_URL, getString(R.string.gateway_base_url)) ?: "",
                 Constants.Prefs.GATEWAY_BASE_URL
             )
-        }
-
-        binding.settingGatewayKey.setOnClickListener {
-            showGatewayKeyDialog()
         }
 
         binding.settingGatewayTest.setOnClickListener {
@@ -231,6 +209,14 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
         // Reset Onboarding
         binding.settingResetOnboarding.setOnClickListener {
             showResetOnboardingDialog()
+        }
+
+        binding.settingClearChat.setOnClickListener {
+            showClearChatDialog()
+        }
+
+        binding.settingVersion.setOnClickListener {
+            showAboutDialog()
         }
 
         binding.switchCheckinReminders.setOnCheckedChangeListener { _, isChecked ->
@@ -393,6 +379,34 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
             .show()
     }
 
+    private fun showClearChatDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.confirm_clear_chat)
+            .setMessage(R.string.confirm_clear_chat_message)
+            .setPositiveButton(R.string.yes) { _, _ ->
+                clearConversation()
+            }
+            .setNegativeButton(R.string.no, null)
+            .show()
+    }
+
+    private fun showAboutDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.menu_about)
+            .setMessage("${getString(R.string.about_description)}\n\n${getString(R.string.about_version)}")
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    private fun clearConversation() {
+        lifecycleScope.launch {
+            val database = AppDatabase.getDatabase(this@SettingsActivity)
+            val repository = ChatRepository(database.messageDao(), this@SettingsActivity)
+            repository.clearConversation(Constants.Conversation.DEFAULT_CONVERSATION_ID)
+            repository.requestWelcomeFromAI(provider = ApiClient.getCurrentProvider(this@SettingsActivity))
+        }
+    }
+
     private fun testGateway() {
         lifecycleScope.launch {
             val provider = ApiClient.getCurrentProvider(this@SettingsActivity)
@@ -431,6 +445,11 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
         // Modelli - solo in modalità developer
         val isDeveloperMode = prefs.getBoolean(Constants.Prefs.DEVELOPER_MODE, false)
         findViewById<View>(R.id.section_models)?.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
+        binding.settingGatewayUrl.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
+        binding.settingSystemPrompt.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
+        binding.settingClearChat.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
+        binding.settingResetOnboarding.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.setting_chat_title)?.visibility = if (isDeveloperMode) View.VISIBLE else View.GONE
         
         if (isDeveloperMode) {
             loadModelSetting(findViewById<TextView>(R.id.tv_model_openai_title), 
@@ -447,20 +466,9 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
                 Constants.Prefs.MODEL_GROQ, R.string.pref_model_groq_title)
         }
 
-        // Tono
-        loadToneSetting(binding.tvToneEmpathyValue, Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
-        loadToneSetting(binding.tvToneApproachValue, Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
-        loadToneSetting(binding.tvToneEnergyValue, Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
-        loadToneSetting(binding.tvToneMoodValue, Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
-        loadToneSetting(binding.tvToneLengthValue, Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
-        loadToneSetting(binding.tvToneStyleValue, Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
-
         // Gateway
         val gatewayUrl = prefs.getString(Constants.Prefs.GATEWAY_BASE_URL, getString(R.string.gateway_base_url)) ?: getString(R.string.gateway_base_url)
         binding.tvGatewayUrlValue.text = if (gatewayUrl.length > 40) "${gatewayUrl.take(20)}...${gatewayUrl.takeLast(20)}" else gatewayUrl
-        
-        val gatewayKey = SecurePreferences.getApiKey(this, "")
-        binding.tvGatewayKeyValue.text = if (gatewayKey.isNotBlank()) maskSecret(gatewayKey) else "Non configurata"
 
         // System Prompt
         val prompt = prefs.getString(Constants.Prefs.SYSTEM_PROMPT, "") ?: ""

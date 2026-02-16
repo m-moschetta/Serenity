@@ -7,7 +7,8 @@ import java.util.UUID
 enum class CheckInType(val displayName: String, val icon: String) {
     MORNING("Mattutino", "sun_horizon"),
     EVENING("Serale", "moon_stars"),
-    WEEKLY("Settimanale", "calendar")
+    WEEKLY("Settimanale", "calendar"),
+    ONBOARDING("Check-in onboarding", "sparkles")
 }
 
 @Entity(tableName = "mood_entries")

@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tranquiz.app.R
 import com.tranquiz.app.data.database.AppDatabase
 import com.tranquiz.app.data.model.CheckInType
@@ -53,6 +54,7 @@ class ProfileFragment : Fragment() {
         setupRecyclerView()
         setupPeriodSelector()
         setupClickListeners()
+        setupToneSettings()
         loadProfileData()
     }
 
@@ -61,6 +63,10 @@ class ProfileFragment : Fragment() {
             when (item.itemId) {
                 R.id.action_settings -> {
                     startActivity(Intent(requireContext(), SettingsActivity::class.java))
+                    true
+                }
+                R.id.action_about -> {
+                    showAboutDialog()
                     true
                 }
                 else -> false
@@ -96,10 +102,28 @@ class ProfileFragment : Fragment() {
         binding.cardEveningCheckIn.setOnClickListener {
             showEveningCheckInDialog()
         }
-        
-        binding.cardToneSettings.setOnClickListener {
-            Toast.makeText(requireContext(), "Impostazioni tono", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupToneSettings() {
+        binding.settingToneEmpathy.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
         }
+        binding.settingToneApproach.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
+        }
+        binding.settingToneEnergy.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
+        }
+        binding.settingToneMood.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
+        }
+        binding.settingToneLength.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
+        }
+        binding.settingToneStyle.setOnClickListener {
+            showToneDialog(Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
+        }
+        loadToneSettings()
     }
 
     private fun loadProfileData() {
@@ -183,13 +207,61 @@ class ProfileFragment : Fragment() {
     private fun updateOnboardingAnswers() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val name = prefs.getString(Constants.Prefs.ONBOARDING_NAME, "")?.trim().orEmpty()
-        val feeling = prefs.getString(Constants.Prefs.ONBOARDING_FEELING, "")?.trim().orEmpty()
         val goal = prefs.getString(Constants.Prefs.ONBOARDING_GOAL, "")?.trim().orEmpty()
         val fallback = getString(R.string.profile_not_set)
 
         binding.tvOnboardingNameValue.text = if (name.isNotEmpty()) name else fallback
-        binding.tvOnboardingFeelingValue.text = if (feeling.isNotEmpty()) feeling else fallback
-        binding.tvOnboardingGoalValue.text = if (goal.isNotEmpty()) goal else fallback
+        binding.tvLongTermGoalValue.text = if (goal.isNotEmpty()) goal else fallback
+    }
+
+    private fun loadToneSettings() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        loadToneSetting(prefs, binding.tvToneEmpathyValue, Constants.Prefs.TONE_EMPATHY, R.array.tone_empathy_entries, R.array.tone_empathy_values)
+        loadToneSetting(prefs, binding.tvToneApproachValue, Constants.Prefs.TONE_APPROACH, R.array.tone_approach_entries, R.array.tone_approach_values)
+        loadToneSetting(prefs, binding.tvToneEnergyValue, Constants.Prefs.TONE_ENERGY, R.array.tone_energy_entries, R.array.tone_energy_values)
+        loadToneSetting(prefs, binding.tvToneMoodValue, Constants.Prefs.TONE_MOOD, R.array.tone_mood_entries, R.array.tone_mood_values)
+        loadToneSetting(prefs, binding.tvToneLengthValue, Constants.Prefs.TONE_LENGTH, R.array.tone_length_entries, R.array.tone_length_values)
+        loadToneSetting(prefs, binding.tvToneStyleValue, Constants.Prefs.TONE_STYLE, R.array.tone_style_entries, R.array.tone_style_values)
+    }
+
+    private fun loadToneSetting(
+        prefs: android.content.SharedPreferences,
+        targetView: android.widget.TextView,
+        prefKey: String,
+        entriesRes: Int,
+        valuesRes: Int
+    ) {
+        val entries = resources.getStringArray(entriesRes)
+        val values = resources.getStringArray(valuesRes)
+        val currentValue = prefs.getString(prefKey, values.firstOrNull() ?: "")
+        val currentIndex = values.indexOf(currentValue).takeIf { it >= 0 } ?: 0
+        targetView.text = entries.getOrNull(currentIndex) ?: entries.firstOrNull().orEmpty()
+    }
+
+    private fun showToneDialog(prefKey: String, entriesRes: Int, valuesRes: Int) {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val entries = resources.getStringArray(entriesRes)
+        val values = resources.getStringArray(valuesRes)
+        val currentValue = prefs.getString(prefKey, values.firstOrNull() ?: "")
+        val currentIndex = values.indexOf(currentValue).takeIf { it >= 0 } ?: 0
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setSingleChoiceItems(entries, currentIndex) { dialog, which ->
+                prefs.edit().putString(prefKey, values[which]).apply()
+                loadToneSettings()
+                dialog.dismiss()
+                Toast.makeText(requireContext(), "Salvato: ${entries[which]}", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showAboutDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.menu_about)
+            .setMessage("${getString(R.string.about_description)}\n\n${getString(R.string.about_version)}")
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun showMorningCheckInDialog() {

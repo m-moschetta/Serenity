@@ -133,6 +133,7 @@
     <string name="pref_chat_category_title">Chat</string>
     <string name="pref_system_prompt_title">Prompt di sistema</string>
     <string name="pref_system_prompt_summary">Personalizza il comportamento di Tranquiz</string>
+    <string name="pref_clear_chat_summary">Elimina tutti i messaggi della conversazione</string>
 
     <string name="pref_emergency_contact_title">Contatto di emergenza</string>
     <string name="pref_emergency_contact_email_title">Email contatto emergenza</string>
@@ -157,7 +158,7 @@
     <string name="onboarding_feeling_option_motivated">Motivato</string>
     <string name="onboarding_feeling_option_overwhelmed">Sopraffatto</string>
     <string name="onboarding_feeling_option_hopeful">Speranzoso</string>
-    <string name="onboarding_feeling_option_irritable">Irritato</string>
+    <string name="onboarding_feeling_option_irritable">Frustrato</string>
     <string name="onboarding_goal_option_anxiety">Gestire l’ansia</string>
     <string name="onboarding_goal_option_mood">Migliorare l’umore</string>
     <string name="onboarding_goal_option_sleep">Dormire meglio</string>
@@ -289,19 +290,21 @@
     <string name="profile_trend_improving">In crescita</string>
     <string name="profile_trend_stable">Stabile</string>
     <string name="profile_trend_declining">In calo</string>
-    <string name="profile_daily_check_in">Check-in giornaliero</string>
-    <string name="profile_morning_check_in">Mattutino</string>
+    <string name="profile_daily_check_in">Fai il Check-in Giornaliero</string>
+    <string name="profile_morning_check_in">Check-in Mattutino</string>
     <string name="profile_morning_subtitle">Motivazione &amp; obiettivi</string>
-    <string name="profile_evening_check_in">Serale</string>
+    <string name="profile_evening_check_in">Check-in Serale</string>
     <string name="profile_evening_subtitle">Come ti senti?</string>
-    <string name="profile_personalization">Personalizzazione</string>
-    <string name="profile_tone_settings">Tono di voce</string>
+    <string name="profile_personalization">Personalizzazione del Tono di Voce</string>
+    <string name="profile_tone_settings">Tono di Voce</string>
     <string name="profile_onboarding_summary">Profilo e preferenze</string>
     <string name="profile_onboarding_name">Nome</string>
     <string name="profile_onboarding_feeling">Come ti senti</string>
     <string name="profile_onboarding_goal">Obiettivo</string>
+    <string name="profile_long_term_goal_title">Obiettivo di Medio-Lungo Periodo</string>
+    <string name="profile_mood_trend_title">Andamento dell\'Umore</string>
     <string name="profile_not_set">Non indicato</string>
-    <string name="profile_recent_check_ins">Check-in recenti</string>
+    <string name="profile_recent_check_ins">Check-in Recenti</string>
     <string name="profile_start_tracking">Inizia a tracciare il tuo umore</string>
     <string name="profile_start_tracking_subtitle">I check-in giornalieri ti aiuteranno a capire meglio come ti senti nel tempo.</string>
     <string name="profile_period_week">Settimana</string>

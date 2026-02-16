@@ -35,6 +35,7 @@ class CheckInAdapter(private var entries: List<MoodEntry>) : RecyclerView.Adapte
     override fun getItemCount() = entries.size
     
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvIcon: TextView = itemView.findViewById(R.id.tv_check_in_icon)
         private val tvType: TextView = itemView.findViewById(R.id.tv_check_in_type)
         private val tvDate: TextView = itemView.findViewById(R.id.tv_check_in_date)
         private val tvTime: TextView = itemView.findViewById(R.id.tv_check_in_time)
@@ -48,12 +49,14 @@ class CheckInAdapter(private var entries: List<MoodEntry>) : RecyclerView.Adapte
             
             when (entry.checkInType) {
                 CheckInType.MORNING -> {
+                    tvIcon.text = "🌅"
                     val motivation = entry.morningMotivation?.let { getMorningMotivationLabel(it) }
                         ?: "Nessuna motivazione"
                     val fear = entry.morningFear?.let { getMorningFearLabel(it) } ?: "Nessuna"
                     tvContent.text = "Motivazione: $motivation • Paura: $fear"
                 }
                 CheckInType.EVENING -> {
+                    tvIcon.text = "🌙"
                     val moodIds = try {
                         JSONArray(entry.selectedMoodIds).let { arr ->
                             (0 until arr.length()).map { arr.getString(it) }
@@ -69,7 +72,24 @@ class CheckInAdapter(private var entries: List<MoodEntry>) : RecyclerView.Adapte
                     }
                 }
                 CheckInType.WEEKLY -> {
+                    tvIcon.text = "📅"
                     tvContent.text = entry.weeklyMoodSummary ?: "Nessun riepilogo"
+                }
+                CheckInType.ONBOARDING -> {
+                    tvIcon.text = "✨"
+                    val moodIds = try {
+                        JSONArray(entry.selectedMoodIds).let { arr ->
+                            (0 until arr.length()).map { arr.getString(it) }
+                        }
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                    val moodLabels = moodIds.map { getMoodLabel(it) }
+                    tvContent.text = if (moodLabels.isNotEmpty()) {
+                        moodLabels.joinToString(", ")
+                    } else {
+                        getMoodEmoji(entry.moodScore.toDouble())
+                    }
                 }
             }
         }

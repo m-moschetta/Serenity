@@ -8,14 +8,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tranquiz.app.R
+import com.tranquiz.app.data.database.AppDatabase
+import com.tranquiz.app.data.model.CheckInType
+import com.tranquiz.app.data.model.MoodEntry
 import com.tranquiz.app.databinding.FragmentOnboardingBinding
 import com.tranquiz.app.ui.onboarding.adapter.OnboardingAdapter
 import com.tranquiz.app.ui.onboarding.model.OnboardingOption
 import com.tranquiz.app.ui.onboarding.model.OnboardingQuestionKind
 import com.tranquiz.app.util.Constants
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONArray
 
 /**
  * Fragment per gestire il flusso di onboarding in 4 step.
@@ -413,7 +420,53 @@ class OnboardingFragment : Fragment() {
             .putBoolean(Constants.Prefs.ONBOARDING_COMPLETED, true)
             .apply()
 
+        saveOnboardingFeelingAsCheckIn()
         callback?.onOnboardingCompleted(userName, userFeeling, userGoal)
+    }
+
+    private fun saveOnboardingFeelingAsCheckIn() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val database = AppDatabase.getDatabase(binding.root.context)
+            val moodDao = database.moodDao()
+            val mappedMoodIds = mapOnboardingFeelingSelections(feelingSelections)
+            val entry = MoodEntry(
+                checkInType = CheckInType.ONBOARDING,
+                selectedMoodIds = JSONArray(mappedMoodIds).toString(),
+                moodScore = calculateMoodScore(mappedMoodIds)
+            )
+            moodDao.insertEntry(entry)
+        }
+    }
+
+    private fun mapOnboardingFeelingSelections(selections: Set<String>): List<String> {
+        return selections.mapNotNull { id ->
+            when (id) {
+                "calm" -> "calm"
+                "anxious" -> "anxious"
+                "tired" -> "tired"
+                "sad" -> "sad"
+                "motivated" -> "motivated"
+                "overwhelmed" -> "overwhelmed"
+                "hopeful" -> "hopeful"
+                "irritable" -> "frustrated"
+                else -> null
+            }
+        }.distinct()
+    }
+
+    private fun calculateMoodScore(moodIds: List<String>): Int {
+        val moodScores = mapOf(
+            "very_happy" to 2, "happy" to 1, "calm" to 1, "peaceful" to 1,
+            "grateful" to 1, "hopeful" to 1, "content" to 0, "motivated" to 1,
+            "loved" to 1, "confident" to 1, "neutral" to 0, "tired" to -1,
+            "anxious" to -1, "stressed" to -1, "frustrated" to -1, "uncertain" to -1,
+            "lonely" to -1, "sad" to -2, "very_sad" to -2, "overwhelmed" to -2
+        )
+
+        if (moodIds.isEmpty()) return 0
+
+        val total = moodIds.sumOf { moodScores[it] ?: 0 }
+        return (total.toDouble() / moodIds.size).toInt().coerceIn(-2, 2)
     }
 
     /**
