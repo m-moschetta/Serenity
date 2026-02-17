@@ -62,7 +62,8 @@ class ChatRepository(
                     headers = headers,
                     provider = selectedProvider,
                     model = providerConfig.defaultModel,
-                    conversationalMessages = conversationalMessages
+                    conversationalMessages = conversationalMessages,
+                    conversationId = conversationId
                 )
 
                 if (shouldBlock) {
@@ -218,7 +219,8 @@ class ChatRepository(
         headers: Map<String, String>,
         provider: AIProvider,
         model: String,
-        conversationalMessages: List<ChatMessage>
+        conversationalMessages: List<ChatMessage>,
+        conversationId: Long
     ): Boolean {
         return try {
             val safetyMessages = mutableListOf<ChatMessage>()
@@ -248,9 +250,24 @@ class ChatRepository(
             } else {
                 response
             }
-            if (!finalResponse.isSuccessful || finalResponse.body() == null) return false
-            val content = finalResponse.body()!!.choices.firstOrNull()?.message?.content?.trim()
-            content.equals(Constants.Safety.BLOCK_RESPONSE, ignoreCase = true)
+            val responseBody = finalResponse.body()
+            val responseError = if (finalResponse.isSuccessful) null else safeErrorBody(finalResponse).takeIf { it.isNotBlank() }
+            val content = responseBody?.choices?.firstOrNull()?.message?.content?.trim()
+            val shouldBlock = content.equals(Constants.Safety.BLOCK_RESPONSE, ignoreCase = true)
+
+            if (isDeveloperModeEnabled()) {
+                insertSafetyDeveloperTrace(
+                    request = request,
+                    response = responseBody,
+                    responseCode = finalResponse.code(),
+                    responseError = responseError,
+                    decision = shouldBlock,
+                    conversationId = conversationId
+                )
+            }
+
+            if (!finalResponse.isSuccessful || responseBody == null) return false
+            shouldBlock
         } catch (e: Exception) {
             logDebug("performSafetyCheck", "Safety check failed: ${e.message}")
             false
@@ -436,6 +453,35 @@ class ChatRepository(
         val content = buildString {
             append("DEV TRACE\n")
             append("User: ").append(userInput ?: "(n/a)").append("\n")
+            append("Request: ").append(requestJson ?: "(n/a)").append("\n")
+            append("HTTP: ").append(responseCode).append("\n")
+            append("Response: ").append(responseBodyJson ?: responseError ?: "(n/a)")
+        }.truncateForChat(12000)
+
+        messageDao.insertMessage(
+            Message(
+                content = content,
+                isFromUser = false,
+                isError = true,
+                conversationId = conversationId
+            )
+        )
+    }
+
+    private suspend fun insertSafetyDeveloperTrace(
+        request: ChatRequest,
+        response: ChatResponse?,
+        responseCode: Int,
+        responseError: String?,
+        decision: Boolean,
+        conversationId: Long
+    ) {
+        val requestJson = runCatching { gson.toJson(request) }.getOrNull()
+        val responseBodyJson = response?.let { runCatching { gson.toJson(it) }.getOrNull() }
+
+        val content = buildString {
+            append("DEV TRACE SAFETY\n")
+            append("Decision: ").append(if (decision) "BLOCK" else "OK").append("\n")
             append("Request: ").append(requestJson ?: "(n/a)").append("\n")
             append("HTTP: ").append(responseCode).append("\n")
             append("Response: ").append(responseBodyJson ?: responseError ?: "(n/a)")
