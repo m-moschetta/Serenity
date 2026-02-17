@@ -25,6 +25,9 @@ interface MoodDao {
     
     @Query("SELECT COUNT(*) FROM mood_entries WHERE date >= :startDate")
     suspend fun getEntryCountSince(startDate: Long): Int
+
+    @Query("SELECT COUNT(*) FROM mood_entries WHERE checkInType = :type AND date >= :startDate AND date < :endDate")
+    suspend fun getEntryCountForTypeBetween(type: CheckInType, startDate: Long, endDate: Long): Int
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: MoodEntry): Long
@@ -37,4 +40,7 @@ interface MoodDao {
     
     @Query("DELETE FROM mood_entries WHERE id = :id")
     suspend fun deleteEntryById(id: String)
+
+    @Query("DELETE FROM mood_entries")
+    suspend fun clearAllEntries()
 }

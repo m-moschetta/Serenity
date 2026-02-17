@@ -373,7 +373,12 @@ Tranquiz: Capisco, può essere difficile quando ci si sente sopraffatti. Un buon
             .setMessage("Vuoi ripristinare l'onboarding? Dovrai completarlo di nuovo al prossimo avvio.")
             .setPositiveButton(R.string.yes) { _, _ ->
                 prefs.edit().putBoolean(Constants.Prefs.ONBOARDING_COMPLETED, false).apply()
-                Toast.makeText(this, "Onboarding ripristinato", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        AppDatabase.getDatabase(this@SettingsActivity).moodDao().clearAllEntries()
+                    }
+                    Toast.makeText(this@SettingsActivity, "Onboarding ripristinato", Toast.LENGTH_SHORT).show()
+                }
             }
             .setNegativeButton(R.string.no, null)
             .show()

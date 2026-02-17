@@ -174,7 +174,7 @@ class OnboardingFragment : Fragment() {
             binding.rvOnboardingOptions.visibility = View.GONE
             binding.toneSelectionContainer.visibility = View.GONE
 
-            val config = getStepConfig(currentStep)
+            val config = getStepConfig()
             binding.tvOnboardingQuestion.setText(config.titleRes)
             binding.tilOnboardingInput.hint = getString(config.hintRes)
             binding.etOnboardingInput.inputType = config.inputType
@@ -236,7 +236,7 @@ class OnboardingFragment : Fragment() {
         }
     }
 
-    private fun getStepConfig(step: Int): StepConfig {
+    private fun getStepConfig(): StepConfig {
         return StepConfig(
             titleRes = R.string.onboarding_name_title,
             hintRes = R.string.onboarding_name_hint,
