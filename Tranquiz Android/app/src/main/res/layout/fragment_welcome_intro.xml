@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_intro_gradient">
+
+    <!-- Skip button -->
+    <TextView
+        android:id="@+id/btn_skip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Salta"
+        android:textColor="#80FFFFFF"
+        android:textSize="14sp"
+        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Pages container -->
+    <FrameLayout
+        android:id="@+id/pages_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/btn_skip"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- ── PAGE 1 ── -->
+        <ScrollView
+            android:id="@+id/page_1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🧠"
+                    android:textSize="64sp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="28dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Le tue emozioni\nmeritano ascolto."
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="24 ore su 24."
+                    android:textColor="#99FFFFFF"
+                    android:textSize="15sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="28dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nessuno dovrebbe sentirsi solo con le proprie emozioni, specialmente quando il mondo sembra troppo rumoroso."
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="15sp"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.5" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ── PAGE 2 ── -->
+        <ScrollView
+            android:id="@+id/page_2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💙"
+                    android:textSize="64sp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="28dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="La tua salute mentale\nnon aspetta il lunedì"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Le sedute di terapia hanno orari. Tranquiz no."
+                    android:textColor="#99FFFFFF"
+                    android:textSize="15sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="28dp" />
+
+                <!-- Features card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_intro_card"
+                    android:padding="20dp">
+
+                    <!-- Feature: Empatia -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="❤️"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Empatia"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ogni parola è pensata per validare, mai per giudicare."
+                                android:textColor="#99FFFFFF"
+                                android:textSize="12sp"
+                                android:lineSpacingMultiplier="1.3" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Feature: Privacy -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔒"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Privacy"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Quello che dici resta tuo, protetto sul tuo dispositivo."
+                                android:textColor="#99FFFFFF"
+                                android:textSize="12sp"
+                                android:lineSpacingMultiplier="1.3" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Feature: Sicurezza -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🛡️"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Sicurezza"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Sistemi di rilevamento crisi integrati per la tua sicurezza."
+                                android:textColor="#99FFFFFF"
+                                android:textSize="12sp"
+                                android:lineSpacingMultiplier="1.3" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ── PAGE 3 ── -->
+        <ScrollView
+            android:id="@+id/page_3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💬"
+                    android:textSize="64sp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="28dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Un luogo sicuro\nper dire tutto."
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2"
+                    android:layout_marginBottom="24dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="&quot;Un luogo sicuro dove poter dire tutto quello che ti passa per la testa, senza mai sentirti giudicato o giudicata.&quot;\n\n— Team Tranquiz"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="15sp"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.5"
+                    android:layout_marginBottom="32dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓  Sempre disponibile, 24/7"
+                    android:textColor="#DDFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓  100% privacy sul device"
+                    android:textColor="#DDFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="10dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓  Dalla tua parte, sempre"
+                    android:textColor="#DDFFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+        </ScrollView>
+
+    </FrameLayout>
+
+    <!-- Bottom bar: dots + button -->
+    <LinearLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="8dp"
+        android:paddingBottom="32dp"
+        android:paddingHorizontal="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Dots -->
+        <LinearLayout
+            android:id="@+id/dots_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginBottom="22dp">
+
+            <View
+                android:id="@+id/dot_0"
+                android:layout_width="22dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#FFFFFFFF" />
+
+            <View
+                android:id="@+id/dot_1"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#4DFFFFFF" />
+
+            <View
+                android:id="@+id/dot_2"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="4dp"
+                android:background="#4DFFFFFF" />
+
+        </LinearLayout>
+
+        <!-- Action button -->
+        <Button
+            android:id="@+id/btn_action"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Avanti"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_intro_btn"
+            android:stateListAnimator="@null"
+            android:elevation="6dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

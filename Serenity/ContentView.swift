@@ -10,6 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
+    @AppStorage("welcomeIntroShown") private var welcomeIntroShown: Bool = false
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "system"
     @ObservedObject private var notificationManager = NotificationManager.shared
     @Environment(\.modelContext) private var context
@@ -52,7 +53,20 @@ struct ContentView: View {
         .tint(ChatStyle.accentPurpleDark)
         .preferredColorScheme(appearance)
         .fullScreenCover(isPresented: $showOnboarding) {
-            OnboardingView()
+            ZStack {
+                if welcomeIntroShown {
+                    OnboardingView()
+                        .transition(.opacity)
+                } else {
+                    WelcomeIntroView {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            welcomeIntroShown = true
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.4), value: welcomeIntroShown)
         }
         .sheet(isPresented: $showEveningCheckIn) {
             EveningCheckInSheet()

@@ -13,6 +13,7 @@ import com.tranquiz.app.R
 import com.tranquiz.app.data.api.ApiClient
 import com.tranquiz.app.databinding.ActivityMainBinding
 import com.tranquiz.app.ui.onboarding.OnboardingFragment
+import com.tranquiz.app.ui.onboarding.WelcomeIntroFragment
 import com.tranquiz.app.ui.viewmodel.ChatViewModel
 import com.tranquiz.app.util.Constants
 
@@ -21,7 +22,9 @@ import com.tranquiz.app.util.Constants
  * Gestisce la navigazione tra Chat e Profilo.
  * L'onboarding è delegato a OnboardingFragment.
  */
-class MainActivity : AppCompatActivity(), OnboardingFragment.OnboardingCallback {
+class MainActivity : AppCompatActivity(),
+    OnboardingFragment.OnboardingCallback,
+    WelcomeIntroFragment.WelcomeIntroCallback {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ChatViewModel by viewModels()
@@ -90,12 +93,38 @@ class MainActivity : AppCompatActivity(), OnboardingFragment.OnboardingCallback 
         binding.bottomNavigation.visibility = View.GONE
         binding.fragmentContainerOnboarding.visibility = View.VISIBLE
 
-        // Aggiungi fragment onboarding se non esiste già
-        if (supportFragmentManager.findFragmentById(R.id.fragment_container_onboarding) == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container_onboarding, OnboardingFragment.newInstance())
-                .commit()
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val introShown = prefs.getBoolean(PREF_WELCOME_INTRO_SHOWN, false)
+
+        if (!introShown) {
+            // Prima apertura: mostra l'intro di benvenuto
+            prefs.edit().putBoolean(PREF_WELCOME_INTRO_SHOWN, true).apply()
+            if (supportFragmentManager.findFragmentById(R.id.fragment_container_onboarding) == null) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_onboarding, WelcomeIntroFragment.newInstance())
+                    .commit()
+            }
+        } else {
+            // Intro già vista: vai direttamente alle domande
+            showOnboardingQuestions()
         }
+    }
+
+    private fun showOnboardingQuestions() {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+            .replace(R.id.fragment_container_onboarding, OnboardingFragment.newInstance())
+            .commit()
+    }
+
+    // ── WelcomeIntroFragment callbacks ──────────────────────────────────────
+
+    override fun onWelcomeIntroCompleted() {
+        showOnboardingQuestions()
+    }
+
+    override fun onWelcomeIntroSkipped() {
+        showOnboardingQuestions()
     }
 
     private fun showMainInterface() {
@@ -170,5 +199,6 @@ class MainActivity : AppCompatActivity(), OnboardingFragment.OnboardingCallback 
     companion object {
         private const val TAG_CHAT = "chat"
         private const val TAG_PROFILE = "profile"
+        private const val PREF_WELCOME_INTRO_SHOWN = "welcome_intro_shown"
     }
 }
